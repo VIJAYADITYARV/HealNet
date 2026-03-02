@@ -5,7 +5,9 @@ const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
 const ExperiencePage = lazy(() => import('./pages/ExperiencePage'))
-const QueryPage = lazy(() => import('./pages/QueryPage'))
+const AISymptomCheckPage = lazy(() => import('./pages/AISymptomCheckPage'))
+const ComparePage = lazy(() => import('./pages/ComparePage'))
+const HealthProfilePage = lazy(() => import('./pages/HealthProfilePage'))
 const SearchPage = lazy(() => import('./pages/SearchPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const AdminPage = lazy(() => import('./pages/AdminPage'))
@@ -31,7 +33,9 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/share-experience" element={<ExperiencePage />} />
-              <Route path="/query" element={<QueryPage />} />
+              <Route path="/ai-symptom-check" element={<AISymptomCheckPage />} />
+              <Route path="/compare" element={<ComparePage />} />
+              <Route path="/health-profile" element={<HealthProfilePage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/hospitals" element={<HospitalsPage />} />

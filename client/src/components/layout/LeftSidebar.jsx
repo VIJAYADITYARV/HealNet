@@ -2,15 +2,16 @@ import { useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { getUserProfile } from '../../features/profile/profileSlice'
+import request from 'axios'
 import {
     Home, Brain, BookOpen, Bookmark, Building2,
-    TrendingUp, Users, ShieldCheck, Settings
+    TrendingUp, Users, ShieldCheck, Settings, Scale, UserCircle
 } from 'lucide-react'
 
 const NAV_ITEMS = [
     { icon: Home, label: 'Home', route: '/' },
-    { icon: Brain, label: 'AI Symptom Check', route: '/query' },
-    { icon: BookOpen, label: 'My Medical Journey', route: '/my-journey' },
+    { icon: Brain, label: 'AI Symptom Check', route: '/ai-symptom-check' },
+    { icon: Scale, label: 'Compare Options', route: '/compare' },
     { icon: Bookmark, label: 'Saved Insights', route: '/saved' },
     { icon: Building2, label: 'Hospitals', route: '/hospitals' },
     { icon: TrendingUp, label: 'Health Trends', route: '/analytics' },
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
 ]
 
 const SECONDARY = [
+    { icon: UserCircle, label: 'Health Profile', route: '/health-profile' },
     { icon: ShieldCheck, label: 'Privacy Center', route: '/privacy' },
     { icon: Settings, label: 'Settings', route: '/settings' },
 ]

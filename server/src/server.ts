@@ -10,10 +10,13 @@ import queryRoutes from './routes/queryRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import hospitalRoutes from './routes/hospitalRoutes.js';
 import voiceRoutes from './routes/voiceRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import insightRoutes from './routes/insightRoutes.js';
+import reportAggregationsRoutes from './routes/reportAggregationsRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 dotenv.config();
 
@@ -50,6 +53,7 @@ const queryLimiter = rateLimit({
 app.use('/api', limiter);
 app.use('/api/auth', authLimiter);
 app.use('/api/query', queryLimiter);
+app.use('/api/ai/query', queryLimiter);
 app.use('/api/voice', queryLimiter);
 
 // ── 5. Routes ──────────────────────────────────────────────────
@@ -59,10 +63,13 @@ app.use('/api/query', queryRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/reports-data', reportAggregationsRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/hospitals', hospitalRoutes);
 app.use('/api/voice', voiceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/insights', insightRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.get('/', (_req, res) => {
   res.send('API is running...');

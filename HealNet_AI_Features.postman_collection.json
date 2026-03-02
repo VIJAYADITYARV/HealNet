@@ -1,0 +1,140 @@
+{
+    "info": {
+        "name": "HealNet Core Postman Collection",
+        "description": "Endpoints for HealNet AI features",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "AI Symptom Check",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer YOUR_TOKEN",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"symptomText\": \"Severe headache with light sensitivity\",\n    \"duration\": \"days\",\n    \"severity\": 4,\n    \"bodyArea\": \"head\",\n    \"location\": \"\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "http://localhost:5000/api/ai/query",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "ai",
+                        "query"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Compare Entities",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer YOUR_TOKEN",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"condition\": \"Migraine\",\n    \"comparisonType\": \"hospital\",\n    \"comparisonList\": [\"Apollo Hospitals\", \"AIIMS Delhi\", \"Max Super Speciality\"],\n    \"filters\": { \"priority\": \"highestSuccess\" }\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "http://localhost:5000/api/analytics/compare",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "analytics",
+                        "compare"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Update Health Profile",
+            "request": {
+                "method": "PATCH",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer YOUR_TOKEN",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"ageGroup\": \"adult\",\n    \"biologicalSex\": \"female\",\n    \"chronicConditions\": [\"Migraine\"],\n    \"allergies\": [\"Penicillin\"],\n    \"aiPersonalizationEnabled\": true\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "http://localhost:5000/api/users/health-profile",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "users",
+                        "health-profile"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Get Health Profile",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer YOUR_TOKEN",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "http://localhost:5000/api/users/health-profile",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "users",
+                        "health-profile"
+                    ]
+                }
+            }
+        }
+    ]
+}

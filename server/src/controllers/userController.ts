@@ -67,3 +67,55 @@ export const toggleAnonymousMode = async (req: any, res: Response): Promise<void
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Get current user health profile
+// @route   GET /api/users/health-profile
+// @access  Private
+export const getHealthProfile = async (req: any, res: Response): Promise<void> => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        res.status(200).json(user.healthProfile || {});
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Update user health profile
+// @route   PATCH /api/users/health-profile
+// @access  Private
+export const updateHealthProfile = async (req: any, res: Response): Promise<void> => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+
+        const { ageGroup, biologicalSex, chronicConditions, allergies, pastSurgeries, lifestyleIndicators, aiPersonalizationEnabled } = req.body;
+
+        user.healthProfile = {
+            ...user.healthProfile,
+            ...(ageGroup !== undefined && { ageGroup }),
+            ...(biologicalSex !== undefined && { biologicalSex }),
+            ...(chronicConditions !== undefined && { chronicConditions: Array.isArray(chronicConditions) ? chronicConditions : user.healthProfile?.chronicConditions }),
+            ...(allergies !== undefined && { allergies: Array.isArray(allergies) ? allergies : user.healthProfile?.allergies }),
+            ...(pastSurgeries !== undefined && { pastSurgeries: Array.isArray(pastSurgeries) ? pastSurgeries : user.healthProfile?.pastSurgeries }),
+            ...(lifestyleIndicators !== undefined && { lifestyleIndicators: Array.isArray(lifestyleIndicators) ? lifestyleIndicators : user.healthProfile?.lifestyleIndicators }),
+            ...(aiPersonalizationEnabled !== undefined && { aiPersonalizationEnabled })
+        };
+
+        if (chronicConditions && Array.isArray(chronicConditions)) user.healthProfile.chronicConditions = chronicConditions;
+        if (allergies && Array.isArray(allergies)) user.healthProfile.allergies = allergies;
+        if (pastSurgeries && Array.isArray(pastSurgeries)) user.healthProfile.pastSurgeries = pastSurgeries;
+        if (lifestyleIndicators && Array.isArray(lifestyleIndicators)) user.healthProfile.lifestyleIndicators = lifestyleIndicators;
+
+        await user.save();
+        res.status(200).json(user.healthProfile);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};

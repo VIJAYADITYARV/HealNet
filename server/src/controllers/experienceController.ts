@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import Experience from '../models/Experience.js';
 import User from '../models/User.js';
 import HelpfulMark from '../models/HelpfulMark.js';
+import axios from 'axios';
 
 // @desc    Get all experiences (feed) with filters
 // @route   GET /api/experiences/feed
@@ -63,6 +64,18 @@ export const createExperience = async (req: any, res: Response): Promise<void> =
         if (count >= 10) badge = 'verified';
         else if (count >= 3) badge = 'contributor';
         await User.findByIdAndUpdate(req.user.id, { contributorBadge: badge });
+
+        // Push to AI Service for vector encoding and semantic search indexing
+        try {
+            const indexText = `Condition: ${condition}. Symptoms: ${symptoms.join(', ')}. Treatment: ${treatment}. Description: ${description || ''}`;
+            await axios.post('http://localhost:8000/index', {
+                text: indexText,
+                experience_id: experience._id.toString()
+            });
+        } catch (aiError) {
+            console.error('[AI Indexing Error] Could not index experience:', aiError);
+            // Optionally could store a flag on experience saying AI indexing failed
+        }
 
         res.status(201).json(experience);
     } catch (error: any) {

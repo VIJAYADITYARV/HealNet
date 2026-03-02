@@ -1,0 +1,21 @@
+{
+  "totalRecords": 500,
+  "conditionsCount": 22,
+  "hospitalsCount": 23,
+  "outcomeDistribution": {
+    "success": 357,
+    "ongoing": 74,
+    "failure": 69
+  },
+  "cityDistribution": {
+    "Chennai": 67,
+    "Coimbatore": 68,
+    "Kolkata": 65,
+    "Delhi": 63,
+    "Bangalore": 62,
+    "Hyderabad": 59,
+    "Pune": 65,
+    "Mumbai": 51
+  },
+  "duplicateExperienceTextCheck": "Passed"
+}

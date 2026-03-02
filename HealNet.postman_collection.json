@@ -1,0 +1,122 @@
+{
+  "info": {
+    "name": "HealNet API",
+    "description": "Postman collection for HealNet endpoints (Auth, Experiences, Query, Analytics, Reports, Admin).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "http://localhost:5000/api/auth/register", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "auth", "register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@user.com\",\n  \"password\": \"password123\",\n  \"role\": \"user\"\n}" }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "http://localhost:5000/api/auth/login", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "auth", "login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@user.com\",\n  \"password\": \"password123\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Experiences",
+      "item": [
+        {
+          "name": "Get Experiences Feed",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:5000/api/experiences/feed", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "experiences", "feed"] }
+          }
+        },
+        {
+          "name": "Create Experience",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "http://localhost:5000/api/experiences", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "experiences"] },
+            "body": { "mode": "raw", "raw": "{\n  \"hospital\": \"Apollo Hospitals\",\n  \"condition\": \"Migraine\",\n  \"symptoms\": [\"Headache\", \"Nausea\"],\n  \"treatment\": \"Rest and Medication\",\n  \"outcome\": \"improvement\",\n  \"recoveryTime\": \"2 days\",\n  \"description\": \"Good experience overall\",\n  \"city\": \"Chennai\",\n  \"costRange\": \"$50-$100\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Query (AI)",
+      "item": [
+        {
+          "name": "Analyze Symptoms",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "http://localhost:5000/api/query", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "query"] },
+            "body": { "mode": "raw", "raw": "{\n  \"symptoms\": \"Severe headache and light sensitivity\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports (Aggregations)",
+      "item": [
+        {
+          "name": "Hospital Mentions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": { "raw": "http://localhost:5000/api/reports-data/hospital-mentions", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "reports-data", "hospital-mentions"] }
+          }
+        },
+        {
+          "name": "Experience Trends",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": { "raw": "http://localhost:5000/api/reports-data/experience-trends", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "reports-data", "experience-trends"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Moderation",
+      "item": [
+        {
+          "name": "Perform Admin Action",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "http://localhost:5000/api/admin/action", "protocol": "http", "host": ["localhost"], "port": "5000", "path": ["api", "admin", "action"] },
+            "body": { "mode": "raw", "raw": "{\n  \"targetId\": \"64dbf123abc456def7890123\",\n  \"actionType\": \"approve\",\n  \"reason\": \"Looks good\",\n  \"itemType\": \"experience\"\n}" }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "token", "value": "YOUR_JWT_TOKEN", "type": "string" },
+    { "key": "admin_token", "value": "YOUR_ADMIN_JWT_TOKEN", "type": "string" }
+  ]
+}

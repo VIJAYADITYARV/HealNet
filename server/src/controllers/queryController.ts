@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
 import Experience from '../models/Experience.js';
+import SymptomQuery from '../models/SymptomQuery.js';
 import cache from '../utils/cache.js';
 
 // @desc    Analyze symptoms and find similar cases
@@ -68,6 +69,12 @@ export const analyzeSymptoms = async (req: Request, res: Response): Promise<void
             },
             aiSummary
         };
+
+        // Save Query Stats for Reports
+        await SymptomQuery.create({
+            queryText: symptoms,
+            matchCount: total
+        });
 
         // Save to Cache
         cache.set(cacheKey, responseData);
