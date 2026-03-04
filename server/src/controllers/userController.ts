@@ -25,8 +25,8 @@ export const getUserProfile = async (req: any, res: Response): Promise<void> => 
 
         // Auto-update badge
         let badge: 'new' | 'contributor' | 'verified' = 'new';
-        if (experiencesShared >= 10) badge = 'verified';
-        else if (experiencesShared >= 3) badge = 'contributor';
+        if (user.credentialPoints >= 100 || experiencesShared >= 10) badge = 'verified';
+        else if (user.credentialPoints >= 30 || experiencesShared >= 3) badge = 'contributor';
 
         if (user.contributorBadge !== badge) {
             await User.findByIdAndUpdate(userId, { contributorBadge: badge });
@@ -39,6 +39,7 @@ export const getUserProfile = async (req: any, res: Response): Promise<void> => 
             role: user.role,
             isAnonymous: user.isAnonymous,
             badge,
+            credentialPoints: user.credentialPoints,
             stats: {
                 experiencesShared,
                 insightsExplored,
@@ -97,21 +98,17 @@ export const updateHealthProfile = async (req: any, res: Response): Promise<void
 
         const { ageGroup, biologicalSex, chronicConditions, allergies, pastSurgeries, lifestyleIndicators, aiPersonalizationEnabled } = req.body;
 
-        user.healthProfile = {
-            ...user.healthProfile,
-            ...(ageGroup !== undefined && { ageGroup }),
-            ...(biologicalSex !== undefined && { biologicalSex }),
-            ...(chronicConditions !== undefined && { chronicConditions: Array.isArray(chronicConditions) ? chronicConditions : user.healthProfile?.chronicConditions }),
-            ...(allergies !== undefined && { allergies: Array.isArray(allergies) ? allergies : user.healthProfile?.allergies }),
-            ...(pastSurgeries !== undefined && { pastSurgeries: Array.isArray(pastSurgeries) ? pastSurgeries : user.healthProfile?.pastSurgeries }),
-            ...(lifestyleIndicators !== undefined && { lifestyleIndicators: Array.isArray(lifestyleIndicators) ? lifestyleIndicators : user.healthProfile?.lifestyleIndicators }),
-            ...(aiPersonalizationEnabled !== undefined && { aiPersonalizationEnabled })
-        };
+        if (!user.healthProfile) {
+            user.healthProfile = {};
+        }
 
-        if (chronicConditions && Array.isArray(chronicConditions)) user.healthProfile.chronicConditions = chronicConditions;
-        if (allergies && Array.isArray(allergies)) user.healthProfile.allergies = allergies;
-        if (pastSurgeries && Array.isArray(pastSurgeries)) user.healthProfile.pastSurgeries = pastSurgeries;
-        if (lifestyleIndicators && Array.isArray(lifestyleIndicators)) user.healthProfile.lifestyleIndicators = lifestyleIndicators;
+        if (ageGroup !== undefined) user.healthProfile.ageGroup = ageGroup;
+        if (biologicalSex !== undefined) user.healthProfile.biologicalSex = biologicalSex;
+        if (chronicConditions !== undefined && Array.isArray(chronicConditions)) user.healthProfile.chronicConditions = chronicConditions;
+        if (allergies !== undefined && Array.isArray(allergies)) user.healthProfile.allergies = allergies;
+        if (pastSurgeries !== undefined && Array.isArray(pastSurgeries)) user.healthProfile.pastSurgeries = pastSurgeries;
+        if (lifestyleIndicators !== undefined && Array.isArray(lifestyleIndicators)) user.healthProfile.lifestyleIndicators = lifestyleIndicators;
+        if (aiPersonalizationEnabled !== undefined) user.healthProfile.aiPersonalizationEnabled = aiPersonalizationEnabled;
 
         await user.save();
         res.status(200).json(user.healthProfile);

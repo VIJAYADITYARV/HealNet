@@ -1,0 +1,6 @@
+[dotenv@17.3.1] injecting env (3) from .env -- tip: ⚡️ secrets for agents: https://dotenvx.com/as2
+Connected to DB
+Loading data from D:\SEM 6\23CSE461\FS CaseStudy\HealNet\synthetic_experiences.json
+Cleared old dummy experiences.
+Successfully imported 500 records!
+Disconnected from DB

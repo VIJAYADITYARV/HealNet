@@ -84,3 +84,37 @@ export const addHospital = async (req: Request, res: Response): Promise<void> =>
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Get hospital by ID with metadata
+// @route   GET /api/hospitals/:id
+// @access  Public
+export const getHospitalById = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const hospital = await Hospital.findById(req.params.id);
+        if (!hospital) {
+            res.status(404).json({ message: 'Hospital not found' });
+            return;
+        }
+        res.status(200).json(hospital);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Update hospital metadata
+// @route   PUT /api/hospitals/:id
+// @access  Private/Admin
+export const updateHospital = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const hospital = await Hospital.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!hospital) {
+            res.status(404).json({ message: 'Hospital not found' });
+            return;
+        }
+        // clear cache
+        cache.del('all_hospitals');
+        res.status(200).json(hospital);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};

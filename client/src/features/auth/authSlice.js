@@ -90,6 +90,12 @@ export const authSlice = createSlice({
             .addCase(logout.fulfilled, (state) => {
                 state.user = null
             })
+            .addCase('profile/toggleAnon/fulfilled', (state, action) => {
+                if (state.user) {
+                    state.user.isAnonymous = action.payload.isAnonymous;
+                    localStorage.setItem('user', JSON.stringify(state.user));
+                }
+            })
     },
 })
 

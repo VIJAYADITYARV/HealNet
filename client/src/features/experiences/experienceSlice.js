@@ -69,6 +69,33 @@ export const toggleHelpful = createAsyncThunk('experiences/helpful', async (id, 
     }
 })
 
+// Update an experience
+export const updateExperience = createAsyncThunk('experiences/update', async ({ id, data }, thunkAPI) => {
+    try {
+        const { auth } = thunkAPI.getState()
+        const config = { headers: { Authorization: `Bearer ${auth.user?.token}` } }
+        const response = await axios.put(API_URL + id, data, config)
+        return response.data
+    } catch (error) {
+        const message = error.response?.data?.message || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+})
+
+// Delete an experience
+export const deleteExperience = createAsyncThunk('experiences/delete', async (id, thunkAPI) => {
+    try {
+        const { auth } = thunkAPI.getState()
+        const config = { headers: { Authorization: `Bearer ${auth.user?.token}` } }
+        const response = await axios.delete(API_URL + id, config)
+        return response.data
+    } catch (error) {
+        const message = error.response?.data?.message || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+})
+
+
 const initialState = {
     experiences: [],
     myExperiences: [],
@@ -165,6 +192,23 @@ export const experienceSlice = createSlice({
                 updateList(state.experiences)
                 updateList(state.myExperiences)
                 updateList(state.communityExperiences)
+            })
+            // Update
+            .addCase(updateExperience.fulfilled, (state, action) => {
+                const updateExpInList = (list) => {
+                    const idx = list.findIndex(e => e._id === action.payload._id)
+                    if (idx !== -1) list[idx] = { ...list[idx], ...action.payload }
+                }
+                updateExpInList(state.experiences)
+                updateExpInList(state.myExperiences)
+                updateExpInList(state.communityExperiences)
+            })
+            // Delete
+            .addCase(deleteExperience.fulfilled, (state, action) => {
+                const id = action.payload.id
+                state.experiences = state.experiences.filter(e => e._id !== id)
+                state.myExperiences = state.myExperiences.filter(e => e._id !== id)
+                state.communityExperiences = state.communityExperiences.filter(e => e._id !== id)
             })
     },
 })

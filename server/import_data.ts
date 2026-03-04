@@ -23,6 +23,7 @@ async function importData() {
         if (!dummyUser) {
             dummyUser = new User({
                 name: 'Synthetic User',
+                username: 'synthetic123',
                 email: 'dummy@synthetic.com',
                 password: 'password123',
                 role: 'user',
@@ -41,7 +42,7 @@ async function importData() {
             if (outcome === 'failure') outcome = 'complication';
 
             return {
-                userId: dummyUser?._id,
+                userId: dummyUser._id,
                 hospital: exp.hospitalName,
                 condition: exp.condition,
                 symptoms: exp.symptoms,
@@ -57,7 +58,7 @@ async function importData() {
             }
         });
 
-        await Experience.deleteMany({ userId: dummyUser?._id }); // Clear previous to avoid duplicates on re-run
+        await Experience.deleteMany({ userId: dummyUser._id }); // Clear previous to avoid duplicates on re-run
         console.log('Cleared old dummy experiences.');
 
         await Experience.insertMany(formattedExperiences);

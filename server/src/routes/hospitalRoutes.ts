@@ -1,7 +1,7 @@
 import express from 'express';
-import { searchHospitals, getAllHospitals, addHospital } from '../controllers/hospitalController.js';
+import { searchHospitals, getAllHospitals, addHospital, getHospitalById, updateHospital } from '../controllers/hospitalController.js';
 import { getHospitalTrustScores } from '../controllers/analyticsController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -11,5 +11,8 @@ router.get('/trust-score', getHospitalTrustScores as any);
 router.get('/', searchHospitals as any);
 router.get('/all', protect as any, getAllHospitals as any);
 router.post('/', protect as any, addHospital as any);
+
+router.get('/:id', getHospitalById as any);
+router.put('/:id', protect as any, admin as any, updateHospital as any);
 
 export default router;

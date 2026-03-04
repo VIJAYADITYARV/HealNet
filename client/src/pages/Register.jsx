@@ -210,6 +210,24 @@ function Register() {
                             {errors.name && <p className="auth-input-error"><AlertCircle size={12} />{errors.name.message}</p>}
                         </div>
 
+                        {/* Username */}
+                        <div className="auth-field">
+                            <label className="auth-input-label">Username</label>
+                            <div className={`auth-input-wrap ${errors.username ? 'error' : ''}`}>
+                                <User size={16} className="auth-input-icon" />
+                                <input
+                                    {...rf('username', {
+                                        required: 'Username is required',
+                                        pattern: { value: /^[a-zA-Z0-9_.-]+$/, message: 'Only letters, numbers, _, ., - allowed' }
+                                    })}
+                                    placeholder="janedoe"
+                                    className="auth-input"
+                                    autoComplete="username"
+                                />
+                            </div>
+                            {errors.username && <p className="auth-input-error"><AlertCircle size={12} />{errors.username.message}</p>}
+                        </div>
+
                         {/* Email */}
                         <div className="auth-field">
                             <label className="auth-input-label">Email Address</label>

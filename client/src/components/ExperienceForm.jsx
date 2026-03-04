@@ -13,17 +13,27 @@ function ExperienceForm() {
         treatment: '',
         outcome: 'success',
         recoveryTime: '',
+        visibility: 'PUBLIC'
     })
 
-    const { hospital, condition, symptoms, treatment, outcome, recoveryTime } = formData
+    const { hospital, condition, symptoms, treatment, outcome, recoveryTime, visibility } = formData
     const [showSuggestions, setShowSuggestions] = useState(false)
     const suggestionRef = useRef(null)
 
     const dispatch = useDispatch()
     const navigate = useNavigate()
-    const { isAnonymous } = useSelector((state) => state.preference)
+    const { user } = useSelector((state) => state.auth)
     const { isLoading, isError, message } = useSelector((state) => state.experiences)
     const { searchResults, isLoading: hospitalsLoading } = useSelector((state) => state.hospitals)
+
+    // Initialize visibility based on global user setting if available
+    useEffect(() => {
+        if (user?.isAnonymous) {
+            setFormData(prev => ({ ...prev, visibility: 'ANONYMOUS' }))
+        } else {
+            setFormData(prev => ({ ...prev, visibility: 'PUBLIC' }))
+        }
+    }, [user?.isAnonymous])
 
     // Handle clicking outside of suggestions
     useEffect(() => {
@@ -75,7 +85,8 @@ function ExperienceForm() {
             treatment,
             outcome,
             recoveryTime,
-            isAnonymous
+            visibility,
+            isAnonymous: visibility === 'ANONYMOUS'
         }
 
         dispatch(createExperience(experienceData))
@@ -90,7 +101,7 @@ function ExperienceForm() {
         <section className="bg-white p-6 rounded-lg shadow-md mb-6 relative">
             <h2 className="text-xl font-bold mb-4 text-gray-800">Share Your Experience</h2>
             <p className="mb-4 text-sm text-gray-600">
-                Posting as: <span className="font-bold">{isAnonymous ? 'Anonymous' : 'Public User'}</span>
+                You can choose to post this publicly or anonymously.
             </p>
 
             <form onSubmit={onSubmit} className="space-y-4">
@@ -207,6 +218,34 @@ function ExperienceForm() {
                             placeholder="e.g. 2 weeks"
                             required
                         />
+                    </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <label className="block text-gray-700 text-sm font-bold">Visibility</label>
+                    <div className="flex gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="visibility"
+                                value="PUBLIC"
+                                checked={visibility === 'PUBLIC'}
+                                onChange={onChange}
+                                className="w-4 h-4 text-blue-600"
+                            />
+                            <span className="text-sm font-medium text-gray-700">Public (Show Profile)</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="visibility"
+                                value="ANONYMOUS"
+                                checked={visibility === 'ANONYMOUS'}
+                                onChange={onChange}
+                                className="w-4 h-4 text-blue-600"
+                            />
+                            <span className="text-sm font-medium text-gray-700">Anonymous (Hide Info)</span>
+                        </label>
                     </div>
                 </div>
 

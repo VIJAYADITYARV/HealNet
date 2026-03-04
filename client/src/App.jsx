@@ -17,6 +17,8 @@ const MyJourneyPage = lazy(() => import('./pages/MyJourneyPage'))
 const SavedInsightsPage = lazy(() => import('./pages/SavedInsightsPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const MessagesPage = lazy(() => import('./pages/MessagesPage'))
 
 function App() {
   return (
@@ -45,6 +47,8 @@ function App() {
               <Route path="/saved" element={<SavedInsightsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/profile/:username" element={<ProfilePage />} />
+              <Route path="/messages" element={<MessagesPage />} />
             </Routes>
           </Suspense>
         </div>

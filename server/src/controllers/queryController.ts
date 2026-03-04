@@ -3,6 +3,7 @@ import axios from 'axios';
 import Experience from '../models/Experience.js';
 import SymptomQuery from '../models/SymptomQuery.js';
 import cache from '../utils/cache.js';
+import { sanitizeExperiences } from '../utils/sanitizer.js';
 
 // @desc    Analyze symptoms and find similar cases
 // @route   POST /api/query
@@ -37,9 +38,11 @@ export const analyzeSymptoms = async (req: Request, res: Response): Promise<void
         }
 
         // 2. Fetch full experience details from MongoDB
-        const similarCases = await Experience.find({
+        const experiences = await Experience.find({
             _id: { $in: similarExperienceIds }
-        });
+        }).populate('userId', 'name isAnonymous');
+
+        const similarCases = sanitizeExperiences(experiences);
 
         // 3. Aggregate Stats
         const total = similarCases.length;

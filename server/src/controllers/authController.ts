@@ -31,8 +31,15 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        // Auto-generate username if not given
+        let username = req.body.username;
+        if (!username) {
+            username = (name.replace(/\s+/g, '').toLowerCase()) + Math.floor(1000 + Math.random() * 9000);
+        }
+
         const user = await User.create({
             name,
+            username,
             email,
             phone,
             password: hashedPassword,
@@ -43,6 +50,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
             res.status(201).json({
                 _id: user.id,
                 name: user.name,
+                username: user.username,
                 email: user.email,
                 role: user.role,
                 isAnonymous: user.isAnonymous,
@@ -70,6 +78,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             res.json({
                 _id: user.id,
                 name: user.name,
+                username: user.username,
                 email: user.email,
                 role: user.role,
                 isAnonymous: user.isAnonymous,

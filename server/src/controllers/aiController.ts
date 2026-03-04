@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 import Experience from '../models/Experience.js';
 import QueryLog from '../models/QueryLog.js';
+import User from '../models/User.js';
+import { sanitizeExperiences } from '../utils/sanitizer.js';
 
 export const analyzeSymptomsWithAI = async (req: any, res: Response): Promise<void> => {
     try {
@@ -28,7 +30,8 @@ export const analyzeSymptomsWithAI = async (req: any, res: Response): Promise<vo
 
         // Simple mock personalization: If user Profile provided context, maybe fetch experiences corresponding to context?
         // We will just fetch the experiences and re-rank if context is applied.
-        let similarCases = await Experience.find(matchQuery);
+        const rawCases = await Experience.find(matchQuery).populate('userId', 'name isAnonymous');
+        let similarCases = sanitizeExperiences(rawCases);
 
         if (userProfileContext?.aiPersonalizationEnabled) {
             // Boost matching conditions based on age/sex
@@ -118,6 +121,65 @@ export const analyzeSymptomsWithAI = async (req: any, res: Response): Promise<vo
         await qLog.save();
 
         res.status(200).json(responseData);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get AI Personalized Recommendations
+// @route   GET /api/ai/recommendations
+// @access  Private
+export const getAIRecommendations = async (req: any, res: Response): Promise<void> => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId);
+
+        if (!user || !user.healthProfile || !user.healthProfile.aiPersonalizationEnabled) {
+            res.status(400).json({ message: 'AI Personalization is not enabled or profile incomplete' });
+            return;
+        }
+
+        const profile = user.healthProfile;
+
+        // Find experiences matching chronic conditions or allergies
+        let queryConditions = [];
+        if (profile.chronicConditions && profile.chronicConditions.length > 0) {
+            queryConditions.push({ condition: { $in: profile.chronicConditions.map(c => new RegExp(c, 'i')) } });
+        }
+        if (profile.allergies && profile.allergies.length > 0) {
+            queryConditions.push({ symptoms: { $in: profile.allergies.map(a => new RegExp(a, 'i')) } });
+        }
+
+        let recommendedExperiences: any[] = [];
+        if (queryConditions.length > 0) {
+            const rawRecs = await Experience.find({ $or: queryConditions })
+                .populate('userId', 'name isAnonymous')
+                .sort({ helpfulCount: -1 })
+                .limit(5);
+            recommendedExperiences = sanitizeExperiences(rawRecs);
+        } else {
+            // fallback
+            const rawRecs = await Experience.find()
+                .populate('userId', 'name isAnonymous')
+                .sort({ helpfulCount: -1 })
+                .limit(5);
+            recommendedExperiences = sanitizeExperiences(rawRecs);
+        }
+
+        let aiSummary = '';
+        try {
+            const summaryResponse = await axios.post('http://localhost:8000/summarize', {
+                text: `Patient is ${profile.ageGroup} ${profile.biologicalSex} with conditions: ${(profile.chronicConditions || []).join(', ')}. Provide a 2 sentence proactive health tip.`
+            });
+            aiSummary = summaryResponse.data.summary;
+        } catch (error) {
+            aiSummary = 'Stay hydrated and maintain regular checkups.';
+        }
+
+        res.status(200).json({
+            personalizedTips: aiSummary,
+            recommendedReading: recommendedExperiences
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

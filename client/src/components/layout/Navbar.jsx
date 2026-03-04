@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { logout, reset } from '../../features/auth/authSlice'
 import { toggleAnonymousMode } from '../../features/profile/profileSlice'
 import {
-    Activity, Search, PenSquare, LogOut, Shield, Eye
+    Activity, Search, PenSquare, LogOut, Shield, Eye, MessageSquare
 } from 'lucide-react'
 
 function Navbar() {
@@ -85,9 +85,24 @@ function Navbar() {
                     <span>Share Experience</span>
                 </button>
 
+                {/* Messages */}
+                {user && (
+                    <button
+                        className="hn-anon-toggle"
+                        onClick={() => navigate('/messages')}
+                        title="Messages"
+                    >
+                        <MessageSquare size={13} />
+                    </button>
+                )}
+
                 {/* User avatar + name */}
                 {user && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <div
+                        style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer' }}
+                        onClick={() => navigate(`/profile/${user.username || user._id}`)}
+                        title="My Profile"
+                    >
                         <div className="hn-avatar-sm">{initials}</div>
                         <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', display: 'none' }}>
                             {user.name?.split(' ')[0]}

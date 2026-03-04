@@ -17,6 +17,11 @@ import userRoutes from './routes/userRoutes.js';
 import insightRoutes from './routes/insightRoutes.js';
 import reportAggregationsRoutes from './routes/reportAggregationsRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
+import commentRoutes from './routes/commentRoutes.js';
+import likeRoutes from './routes/likeRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
 
 dotenv.config();
 
@@ -28,13 +33,24 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 
+// DEBUG LOGGING
+app.use((req, res, next) => {
+  if (req.url.startsWith('/api')) {
+    console.log(`[REQ] ${req.method} ${req.url} (on port ${PORT})`);
+    if (req.url.startsWith('/api/comments') || req.url.startsWith('/api/likes')) {
+      console.log(`[DEBUG] Reached comment/like controller for URL: ${req.url}`);
+    }
+  }
+  next();
+});
+
 // ── 2. Security headers ────────────────────────────────────────
 app.use(helmet({ xssFilter: false }));
 
 // ── 4. Rate Limiting ───────────────────────────────────────────
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 500,
+  max: 5000, // increased drastically to avoid 429
   message: 'Too many requests from this IP, please try again after 15 minutes'
 });
 
@@ -70,9 +86,26 @@ app.use('/api/voice', voiceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/insights', insightRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/comments', commentRoutes);
+app.use('/api/likes', likeRoutes);
+app.use('/api/messages', messageRoutes);
+
+app.get('/api/test-proxy', (req, res) => {
+  res.json({ message: 'Proxy is working correctly', timestamp: new Date() });
+});
 
 app.get('/', (_req, res) => {
   res.send('API is running...');
+});
+
+// ── 5.5 Match-all 404 for debugging ──────────────────────────
+app.use((req, res) => {
+  if (req.url.startsWith('/api')) {
+    console.warn(`[404-Server] Unmatched route: ${req.method} ${req.url}`);
+  }
+  res.status(404).json({ message: `Route ${req.method} ${req.url} not found on this server` });
 });
 
 // ── 6. Global error handler ────────────────────────────────────

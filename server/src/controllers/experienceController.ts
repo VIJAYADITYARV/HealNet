@@ -3,6 +3,7 @@ import Experience from '../models/Experience.js';
 import User from '../models/User.js';
 import HelpfulMark from '../models/HelpfulMark.js';
 import axios from 'axios';
+import { sanitizeExperience, sanitizeExperiences } from '../utils/sanitizer.js';
 
 // @desc    Get all experiences (feed) with filters
 // @route   GET /api/experiences/feed
@@ -26,8 +27,10 @@ export const getExperiencesFeed = async (req: Request, res: Response): Promise<v
             .skip(skip)
             .limit(limit);
 
+        const sanitizedExperiences = sanitizeExperiences(experiences);
+
         res.status(200).json({
-            experiences,
+            experiences: sanitizedExperiences,
             page,
             pages: Math.ceil(total / limit),
             total
@@ -58,7 +61,8 @@ export const createExperience = async (req: any, res: Response): Promise<void> =
             isAnonymous: isAnonymous || false
         });
 
-        // Update user badge based on experience count
+        // Update user badge and points based on experience count
+        await User.findByIdAndUpdate(req.user.id, { $inc: { credentialPoints: 10 } });
         const count = await Experience.countDocuments({ userId: req.user.id });
         let badge = 'new';
         if (count >= 10) badge = 'verified';
@@ -99,8 +103,10 @@ export const getExperiences = async (req: Request, res: Response): Promise<void>
             .skip(skip)
             .limit(limit);
 
+        const sanitizedExperiences = sanitizeExperiences(experiences);
+
         res.status(200).json({
-            experiences,
+            experiences: sanitizedExperiences,
             page,
             pages: Math.ceil(total / limit),
             total
@@ -120,7 +126,8 @@ export const getExperienceById = async (req: Request, res: Response): Promise<vo
             res.status(404).json({ message: 'Experience not found' });
             return;
         }
-        res.status(200).json(experience);
+        const sanitizedExperience = sanitizeExperience(experience);
+        res.status(200).json(sanitizedExperience);
     } catch (error: any) {
         res.status(400).json({ message: error.message });
     }
@@ -134,17 +141,25 @@ export const toggleHelpful = async (req: any, res: Response): Promise<void> => {
         const experienceId = req.params.id;
         const userId = req.user.id;
 
+        const experience = await Experience.findById(experienceId);
+        if (!experience) {
+            res.status(404).json({ message: 'Experience not found' });
+            return;
+        }
+
         const existing = await HelpfulMark.findOne({ userId, experienceId });
 
         if (existing) {
             // Remove helpful
             await HelpfulMark.deleteOne({ userId, experienceId });
             await Experience.findByIdAndUpdate(experienceId, { $inc: { helpfulCount: -1 } });
+            await User.findByIdAndUpdate(experience.userId, { $inc: { credentialPoints: -2 } });
             res.status(200).json({ helpful: false });
         } else {
             // Add helpful
             await HelpfulMark.create({ userId, experienceId });
             await Experience.findByIdAndUpdate(experienceId, { $inc: { helpfulCount: 1 } });
+            await User.findByIdAndUpdate(experience.userId, { $inc: { credentialPoints: 2 } });
             res.status(200).json({ helpful: true });
         }
     } catch (error: any) {
@@ -181,7 +196,61 @@ export const getCommunityFeed = async (req: Request, res: Response): Promise<voi
             .skip(skip)
             .limit(limit);
 
-        res.status(200).json({ experiences, page, pages: Math.ceil(total / limit), total });
+        const sanitizedExperiences = sanitizeExperiences(experiences);
+
+        res.status(200).json({ experiences: sanitizedExperiences, page, pages: Math.ceil(total / limit), total });
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// @desc    Update experience by ID
+// @route   PUT /api/experiences/:id
+// @access  Private
+export const updateExperience = async (req: any, res: Response): Promise<void> => {
+    try {
+        const experience = await Experience.findById(req.params.id);
+        if (!experience) {
+            res.status(404).json({ message: 'Experience not found' });
+            return;
+        }
+
+        // Make sure user owns the experience
+        if (experience.userId.toString() !== req.user.id) {
+            res.status(401).json({ message: 'User not authorized' });
+            return;
+        }
+
+        const updatedExperience = await Experience.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.status(200).json(updatedExperience);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// @desc    Delete experience by ID
+// @route   DELETE /api/experiences/:id
+// @access  Private
+export const deleteExperience = async (req: any, res: Response): Promise<void> => {
+    try {
+        const experience = await Experience.findById(req.params.id);
+        if (!experience) {
+            res.status(404).json({ message: 'Experience not found' });
+            return;
+        }
+
+        // Make sure user owns the experience
+        if (experience.userId.toString() !== req.user.id) {
+            res.status(401).json({ message: 'User not authorized' });
+            return;
+        }
+
+        await experience.deleteOne();
+
+        // Remove helpful marks related to this experience
+        await HelpfulMark.deleteMany({ experienceId: req.params.id });
+
+        res.status(200).json({ id: req.params.id });
     } catch (error: any) {
         res.status(400).json({ message: error.message });
     }

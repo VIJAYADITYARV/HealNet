@@ -6,9 +6,15 @@ import Experience from '../models/Experience.js';
 // @access  Public
 export const searchExperiences = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { q, condition, hospital, outcome, sort } = req.query;
+        const { q, condition, hospital, outcome, sort, city, treatment, minHelpful, costRange } = req.query;
 
         let query: any = {};
+
+        // Advanced Search Filters
+        if (city) query.city = { $regex: city, $options: 'i' };
+        if (treatment) query.treatment = { $regex: treatment, $options: 'i' };
+        if (minHelpful) query.helpfulCount = { $gte: parseInt(minHelpful as string) };
+        if (costRange) query.costRange = costRange;
 
         // Text Search
         if (q) {
@@ -44,10 +50,18 @@ export const searchExperiences = async (req: Request, res: Response): Promise<vo
             .sort(sortOption)
             .skip(skip)
             .limit(limit)
-            .populate('userId', 'name');
+            .populate('userId', 'name isAnonymous');
+
+        const sanitizedExperiences = experiences.map((exp: any) => {
+            const expObj = exp.toObject();
+            if (expObj.isAnonymous || (expObj.userId && expObj.userId.isAnonymous)) {
+                expObj.userId = { _id: null, name: 'Anonymous User', isAnonymous: true };
+            }
+            return expObj;
+        });
 
         res.status(200).json({
-            results: experiences,
+            results: sanitizedExperiences,
             page,
             pages: Math.ceil(total / limit),
             total

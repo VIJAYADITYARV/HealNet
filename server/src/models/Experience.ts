@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IExperience extends Document {
-    userId: mongoose.Schema.Types.ObjectId;
+    userId: mongoose.Types.ObjectId;
     hospital: string;
     condition: string;
     symptoms: string[];
@@ -12,6 +12,9 @@ export interface IExperience extends Document {
     city?: string;
     costRange?: string;
     helpfulCount: number;
+    likeCount: number;
+    commentCount: number;
+    visibility: 'PUBLIC' | 'ANONYMOUS';
     isAnonymous: boolean;
     createdAt: Date;
 }
@@ -32,6 +35,9 @@ const ExperienceSchema: Schema = new Schema({
     city: { type: String },
     costRange: { type: String },
     helpfulCount: { type: Number, default: 0 },
+    likeCount: { type: Number, default: 0 },
+    commentCount: { type: Number, default: 0 },
+    visibility: { type: String, enum: ['PUBLIC', 'ANONYMOUS'], default: 'PUBLIC' },
     isAnonymous: { type: Boolean, default: false },
 }, {
     timestamps: true

@@ -10,6 +10,7 @@ import {
 
 const NAV_ITEMS = [
     { icon: Home, label: 'Home', route: '/' },
+    { icon: BookOpen, label: 'My Journey', route: '/my-journey' },
     { icon: Brain, label: 'AI Symptom Check', route: '/ai-symptom-check' },
     { icon: Scale, label: 'Compare Options', route: '/compare' },
     { icon: Bookmark, label: 'Saved Insights', route: '/saved' },

@@ -18,10 +18,11 @@ function ExperiencePage() {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const { user } = useSelector(s => s.auth)
-    const { isAnonymous } = useSelector(s => s.preference)
+    const globalIsAnonymous = user?.isAnonymous || false
     const { isLoading, isSuccess, isError, message } = useSelector(s => s.experiences)
     const { searchResults, isLoading: hospitalsLoading } = useSelector(s => s.hospitals)
 
+    const [isAnonymous, setIsAnonymous] = useState(globalIsAnonymous)
     const [formData, setFormData] = useState({
         hospital: '', condition: '', symptoms: '', treatment: '',
         outcome: 'success', recoveryTime: '', description: '', city: '', costRange: '',
@@ -31,7 +32,11 @@ function ExperiencePage() {
     const suggestionRef = useRef(null)
 
     useEffect(() => {
-        if (!user) navigate('/login')
+        if (!user) {
+            navigate('/login')
+        } else {
+            setIsAnonymous(user.isAnonymous)
+        }
     }, [user, navigate])
 
     useEffect(() => {
@@ -93,16 +98,19 @@ function ExperiencePage() {
                 boxShadow: '0 2px 15px -3px rgba(37,99,235,0.07)',
                 border: '1px solid #e2e8f0',
             }}>
-                {/* Anonymous indicator */}
-                <div style={{
-                    display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20,
-                    padding: '8px 14px', borderRadius: 10,
-                    background: isAnonymous ? '#f8fafc' : '#eff6ff',
-                    border: `1px solid ${isAnonymous ? '#e2e8f0' : '#bfdbfe'}`,
-                }}>
+                <div
+                    onClick={() => setIsAnonymous(!isAnonymous)}
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20,
+                        padding: '8px 14px', borderRadius: 10,
+                        background: isAnonymous ? '#f8fafc' : '#eff6ff',
+                        border: `1px solid ${isAnonymous ? '#e2e8f0' : '#bfdbfe'}`,
+                        cursor: 'pointer', transition: 'all 0.25s'
+                    }}
+                >
                     {isAnonymous ? <Shield size={14} color="#64748b" /> : <Eye size={14} color="#2563eb" />}
                     <span style={{ fontSize: '0.82rem', fontWeight: 600, color: isAnonymous ? '#64748b' : '#2563eb' }}>
-                        Posting as: {isAnonymous ? 'Anonymous — your identity will be hidden' : 'Public — your name will be visible'}
+                        Posting as: {isAnonymous ? 'Anonymous' : 'Public'} (Click to switch)
                     </span>
                 </div>
 
