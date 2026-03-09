@@ -16,6 +16,7 @@ export const addLike = createAsyncThunk('likes/add', async (experienceId, thunkA
 
 export const removeLike = createAsyncThunk('likes/remove', async (experienceId, thunkAPI) => {
     try {
+        const { auth } = thunkAPI.getState();
         const config = { headers: { Authorization: `Bearer ${auth.user?.token}` } };
         const response = await axios.delete(`${API_URL}/${experienceId}`, config);
         return response.data; // { experienceId }

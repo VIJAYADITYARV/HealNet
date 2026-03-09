@@ -1,13 +1,16 @@
-import { useState } from 'react'
 import { useSelector } from 'react-redux'
+import { useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import AppLayout from '../components/layout/AppLayout'
 import { Search, Brain, Activity, Clock, MapPin, Loader2, Building2 } from 'lucide-react'
 
 const AISymptomCheckPage = () => {
     const { user } = useSelector((state) => state.auth)
+    const [searchParams] = useSearchParams()
+    const urlSymptom = searchParams.get('q') || ''
+
     const [formData, setFormData] = useState({
-        symptomText: '',
+        symptomText: urlSymptom,
         duration: '',
         severity: 3,
         bodyArea: '',

@@ -6,7 +6,7 @@ const API_URL = '/api/search/'
 // Search experiences
 export const searchExperiences = createAsyncThunk('search/searchExperiences', async (params, thunkAPI) => {
     try {
-        // params is an object { q, condition, hospital, outcome, sort }
+        // params is an object { q, condition, hospital, outcome, sort, aiSummary }
         const response = await axios.get(API_URL, { params })
         return response.data
     } catch (error) {
@@ -17,6 +17,7 @@ export const searchExperiences = createAsyncThunk('search/searchExperiences', as
 
 const initialState = {
     results: [],
+    aiInsight: null,
     page: 1,
     pages: 1,
     total: 0,
@@ -32,6 +33,7 @@ export const searchSlice = createSlice({
     reducers: {
         reset: (state) => {
             state.results = []
+            state.aiInsight = null
             state.page = 1
             state.pages = 1
             state.total = 0
@@ -54,6 +56,7 @@ export const searchSlice = createSlice({
                     state.results = [...state.results, ...action.payload.results]
                 } else {
                     state.results = action.payload.results
+                    state.aiInsight = action.payload.aiInsight
                 }
 
                 state.page = action.payload.page

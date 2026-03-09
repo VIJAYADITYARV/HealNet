@@ -79,7 +79,10 @@ export const getHealthProfile = async (req: any, res: Response): Promise<void> =
             res.status(404).json({ message: 'User not found' });
             return;
         }
-        res.status(200).json(user.healthProfile || {});
+        res.status(200).json({
+            profile: user.healthProfile || {},
+            logs: user.healthLogs || []
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -114,5 +117,77 @@ export const updateHealthProfile = async (req: any, res: Response): Promise<void
         res.status(200).json(user.healthProfile);
     } catch (error: any) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Add a health log record
+// @route   POST /api/users/health-logs
+// @access  Private
+export const createHealthLog = async (req: any, res: Response): Promise<void> => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        user.healthLogs.push(req.body);
+        await user.save();
+        res.status(201).json(user.healthLogs[user.healthLogs.length - 1]);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Update a health log record
+// @route   PATCH /api/users/health-logs/:id
+// @access  Private
+export const updateHealthLog = async (req: any, res: Response): Promise<void> => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        const logIndex = user.healthLogs.findIndex((l: any) => l._id.toString() === req.params.id);
+        if (logIndex === -1) {
+            res.status(404).json({ message: 'Log not found' });
+            return;
+        }
+        user.healthLogs[logIndex] = { ...user.healthLogs[logIndex], ...req.body };
+        await user.save();
+        res.status(200).json(user.healthLogs[logIndex]);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete a health log record
+// @route   DELETE /api/users/health-logs/:id
+// @access  Private
+export const deleteHealthLog = async (req: any, res: Response): Promise<void> => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        user.healthLogs = user.healthLogs.filter((l: any) => l._id.toString() !== req.params.id);
+        await user.save();
+        res.status(200).json({ message: 'Log removed' });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const getPublicEmergencyInfo = async (req: Request, res: Response) => {
+    try {
+        const user = await User.findById(req.params.id).select('name phone healthProfile email');
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        res.status(200).json(user);
+    } catch (error: any) {
+        res.status(400).json({ message: 'Invalid ID or user not found' });
     }
 };

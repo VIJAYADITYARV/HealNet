@@ -19,6 +19,7 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const MessagesPage = lazy(() => import('./pages/MessagesPage'))
+const EmergencyViewPage = lazy(() => import('./pages/EmergencyViewPage'))
 
 function App() {
   return (
@@ -49,6 +50,7 @@ function App() {
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/profile/:username" element={<ProfilePage />} />
               <Route path="/messages" element={<MessagesPage />} />
+              <Route path="/emergency/:id" element={<EmergencyViewPage />} />
             </Routes>
           </Suspense>
         </div>

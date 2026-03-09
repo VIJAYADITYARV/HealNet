@@ -27,7 +27,7 @@ function AISearchCard() {
     }
 
     const handleSubmit = () => {
-        if (text.trim()) navigate(`/query?q=${encodeURIComponent(text.trim())}`)
+        if (text.trim()) navigate(`/ai-symptom-check?q=${encodeURIComponent(text.trim())}`)
     }
 
     return (

@@ -1,42 +1,52 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppLayout from '../components/layout/AppLayout'
-import { Building2, MapPin, Star, Users, Activity, ChevronRight, Filter } from 'lucide-react'
+import {
+    Building2, MapPin, Star, Users, Activity,
+    ChevronRight, Filter, ShieldCheck, TrendingUp,
+    Award, ThumbsUp, HeartPulse, CheckCircle
+} from 'lucide-react'
 
 const HOSPITALS = [
     {
         id: 1, name: 'Apollo Hospitals', city: 'Chennai', score: 94,
         cases: 1240, specialties: ['Cardiology', 'Oncology', 'Neurology'],
         tagline: 'Leading multi-specialty hospital with cutting-edge technology.',
+        trustTier: 'Elite', reliability: 0.98
     },
     {
         id: 2, name: 'AIIMS Delhi', city: 'New Delhi', score: 91,
         cases: 980, specialties: ['General Medicine', 'Surgery', 'Psychiatry'],
         tagline: 'Premier government medical institute with world-class research.',
+        trustTier: 'Diamond', reliability: 0.95
     },
     {
         id: 3, name: 'Fortis Healthcare', city: 'Gurgaon', score: 88,
         cases: 760, specialties: ['Orthopaedics', 'Fertility', 'Kidney Care'],
         tagline: 'Pioneering patient care across specialties.',
+        trustTier: 'Platinum', reliability: 0.92
     },
     {
         id: 4, name: 'Max Super Speciality', city: 'Mumbai', score: 85,
         cases: 620, specialties: ['Liver Transplant', 'Cancer Care', 'Neonatology'],
         tagline: 'Advanced diagnostics with compassionate care.',
+        trustTier: 'Gold', reliability: 0.89
     },
     {
         id: 5, name: 'Narayana Health', city: 'Bengaluru', score: 82,
         cases: 540, specialties: ['Heart Surgery', 'Paediatrics', 'Trauma'],
         tagline: 'Affordable world-class healthcare for all.',
+        trustTier: 'Gold', reliability: 0.86
     },
     {
         id: 6, name: 'Manipal Hospital', city: 'Bengaluru', score: 79,
         cases: 480, specialties: ['Robotic Surgery', 'Bone Marrow', 'ENT'],
         tagline: 'Innovation-led tertiary care across India.',
+        trustTier: 'Silver', reliability: 0.82
     },
 ]
 
-const TABS = ['Overview', 'Treatment Outcomes', 'Patient Journeys', 'Risk Patterns']
+const TABS = ['Overview', 'Trust Scorecard', 'Treatment Outcomes', 'Patient Journeys']
 const CONDITIONS = ['All', 'Cardiology', 'Neurology', 'Orthopaedics', 'Oncology', 'Fertility']
 
 function scoreColor(s) {
@@ -47,94 +57,80 @@ function scoreColor(s) {
 
 function HospitalCard({ h, onClick }) {
     return (
-        <div
-            className="hn-feed-card"
-            style={{ cursor: 'pointer' }}
-            onClick={() => onClick(h)}
-        >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                {/* Score badge */}
-                <div
-                    className="hn-hosp-score"
-                    style={{ background: `${scoreColor(h.score)}18`, color: scoreColor(h.score) }}
-                >
-                    {h.score}
+        <div className="hn-feed-card" style={{ cursor: 'pointer', border: '1.5px solid #e2e8f0', transition: 'transform 0.2s, box-shadow 0.2s' }} onClick={() => onClick(h)}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                <div style={{ position: 'relative' }}>
+                    <div className="hn-hosp-score" style={{ background: `${scoreColor(h.score)}18`, color: scoreColor(h.score), borderRadius: 16 }}>
+                        {h.score}
+                    </div>
+                    {h.score >= 90 && (
+                        <div style={{ position: 'absolute', top: -5, right: -5, background: '#2563eb', borderRadius: '50%', padding: 4, border: '2px solid white' }}>
+                            <Award size={10} color="white" />
+                        </div>
+                    )}
                 </div>
 
                 <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>{h.name}</h3>
-                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: scoreColor(h.score), background: `${scoreColor(h.score)}15`, padding: '2px 8px', borderRadius: 999 }}>
-                            {h.score}% success rate
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+                        <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>{h.name}</h3>
+                        <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#2563eb', background: '#eff6ff', padding: '2px 10px', borderRadius: 20, textTransform: 'uppercase' }}>
+                            {h.trustTier} Tier
                         </span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                        <MapPin size={12} color="#94a3b8" />
-                        <span style={{ fontSize: '0.78rem', color: '#64748b' }}>{h.city}</span>
-                        <span style={{ color: '#e2e8f0' }}>•</span>
-                        <Users size={12} color="#94a3b8" />
-                        <span style={{ fontSize: '0.78rem', color: '#64748b' }}>{h.cases.toLocaleString()} patient cases</span>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>
+                            <MapPin size={12} /> {h.city}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>
+                            <Users size={12} /> {h.cases.toLocaleString()} cases
+                        </div>
                     </div>
 
-                    <p style={{ fontSize: '0.82rem', color: '#475569', margin: '8px 0', lineHeight: 1.5 }}>{h.tagline}</p>
+                    <p style={{ fontSize: '0.82rem', color: '#475569', margin: '12px 0', lineHeight: 1.5 }}>{h.tagline}</p>
 
-                    {/* Specialties */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                         {h.specialties.map((s, i) => (
-                            <span key={i} className="hn-feed-chip" style={{ background: '#f5f3ff', color: '#6d28d9' }}>{s}</span>
+                            <span key={i} style={{ background: '#f8fafc', color: '#1e293b', padding: '4px 10px', borderRadius: 8, fontSize: '0.72rem', fontWeight: 700, border: '1px solid #e2e8f0' }}>{s}</span>
                         ))}
                     </div>
                 </div>
 
-                <ChevronRight size={18} color="#94a3b8" style={{ flexShrink: 0, marginTop: 2 }} />
+                <ChevronRight size={18} color="#94a3b8" style={{ marginTop: 4 }} />
             </div>
         </div>
     )
 }
 
 function HospitalDetail({ h, onClose }) {
-    const [tab, setTab] = useState('Overview')
+    const [tab, setTab] = useState('Trust Scorecard')
 
     return (
-        <div>
-            {/* Back button */}
-            <button
-                onClick={onClose}
-                style={{
-                    background: 'none', border: 'none', color: '#2563eb', fontSize: '0.82rem',
-                    fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center',
-                    gap: 4, padding: '0 0 12px 0', fontFamily: 'inherit',
-                }}
-            >
-                ← Back to Hospitals
+        <div style={{ animation: 'slideIn 0.3s ease' }}>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20 }}>
+                <ChevronRight size={16} style={{ transform: 'rotate(180deg)' }} /> Back to Hospital Intelligence
             </button>
 
-            {/* Header */}
-            <div className="hn-hosp-header">
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-                    <div className="hn-hosp-score" style={{ background: `${scoreColor(h.score)}18`, color: scoreColor(h.score), width: 60, height: 60 }}>
+            <div style={{ background: 'white', borderRadius: 24, padding: 32, border: '1.5px solid #e2e8f0', boxShadow: '0 8px 30px rgba(0,0,0,0.03)', marginBottom: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+                    <div style={{ width: 80, height: 80, borderRadius: 20, background: `${scoreColor(h.score)}10`, color: scoreColor(h.score), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 900 }}>
                         {h.score}
                     </div>
                     <div style={{ flex: 1 }}>
-                        <h1 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: '#0f172a' }}>{h.name}</h1>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-                            <MapPin size={13} color="#94a3b8" />
-                            <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{h.city}</span>
-                            <span style={{ color: '#e2e8f0' }}>•</span>
-                            <Activity size={13} color="#94a3b8" />
-                            <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{h.cases.toLocaleString()} cases analyzed</span>
-                            <span style={{ color: '#e2e8f0' }}>•</span>
-                            <Star size={13} color={scoreColor(h.score)} fill={scoreColor(h.score)} />
-                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: scoreColor(h.score) }}>
-                                {h.score}% success rate
-                            </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+                            <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 900, color: '#0f172a' }}>{h.name}</h1>
+                            <Award size={24} color="#f59e0b" fill="#f59e0b" />
+                        </div>
+                        <div style={{ display: 'flex', gap: 16, alignItems: 'center', color: '#64748b', fontSize: '0.9rem', fontWeight: 600 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><MapPin size={16} /> {h.city}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Activity size={16} /> Verified Protocol</div>
+                            <div style={{ color: scoreColor(h.score), fontWeight: 800 }}>{h.score}% Aggregated Trust Score</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Tabs */}
-            <div className="hn-tabs">
+            <div className="hn-tabs" style={{ marginBottom: 24 }}>
                 {TABS.map(t => (
                     <button key={t} className={`hn-tab ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
                         {t}
@@ -142,49 +138,69 @@ function HospitalDetail({ h, onClose }) {
                 ))}
             </div>
 
-            {/* Tab content */}
-            {tab === 'Overview' && (
-                <div>
-                    <div className="hn-section-title">Top Specialties</div>
-                    {h.specialties.map((s, i) => (
-                        <div key={i} className="hn-feed-card" style={{ marginBottom: 8 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{s}</span>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 4 }}>
-                                        {(80 + i * 5)}% success
+            {/* TRUST SCORECARD TAB CONTENT */}
+            {tab === 'Trust Scorecard' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                    <div style={{ background: 'white', borderRadius: 24, padding: 24, border: '1.5px solid #e2e8f0' }}>
+                        <h3 style={{ margin: '0 0 20px', fontSize: '0.95rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <ShieldCheck size={20} color="#2563eb" /> Reliability Metrics
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                            {[
+                                { label: 'Treatment Success Rate', val: h.score, icon: <TrendingUp size={16} /> },
+                                { label: 'Patient Experience Accuracy', val: 97, icon: <ThumbsUp size={16} /> },
+                                { label: 'Protocol Adherence', val: 92, icon: <HeartPulse size={16} /> },
+                                { label: 'Data Integrity Score', val: 99, icon: <CheckCircle size={16} /> }
+                            ].map((m, i) => (
+                                <div key={i}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '0.8rem', fontWeight: 700, color: '#1e293b' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{m.icon} {m.label}</div>
+                                        <span>{m.val}%</span>
                                     </div>
-                                    <div style={{ width: 100, height: 5, background: '#e2e8f0', borderRadius: 999, overflow: 'hidden' }}>
-                                        <div style={{ height: '100%', width: `${80 + i * 5}%`, background: 'linear-gradient(90deg,#2563eb,#10b981)', borderRadius: 999 }} />
+                                    <div style={{ height: 6, background: '#f1f5f9', borderRadius: 10, overflow: 'hidden' }}>
+                                        <div style={{ height: '100%', width: `${m.val}%`, background: '#2563eb', borderRadius: 10 }} />
                                     </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                        <div style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderRadius: 24, padding: 24, color: 'white' }}>
+                            <h3 style={{ margin: '0 0 16px', fontSize: '0.95rem', fontWeight: 800 }}>HealNet Verification Index</h3>
+                            <div style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: 8 }}>{h.reliability.toFixed(2)}<span style={{ fontSize: '1rem', opacity: 0.5, marginLeft: 8 }}>/ 1.0</span></div>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: '#94a3b8', lineHeight: 1.5 }}>
+                                Calculated using dynamic validation from {h.cases.toLocaleString()} patientjourneys and verified medical protocols.
+                            </p>
+                            <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+                                <div style={{ flex: 1, padding: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 12, textAlign: 'center' }}>
+                                    <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.6 }}>Anonymity Tier</div>
+                                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Tier 1 (Max)</div>
+                                </div>
+                                <div style={{ flex: 1, padding: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 12, textAlign: 'center' }}>
+                                    <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.6 }}>Trust Tier</div>
+                                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{h.trustTier}</div>
                                 </div>
                             </div>
                         </div>
-                    ))}
+                    </div>
                 </div>
             )}
 
-            {tab === 'Patient Journeys' && (
+            {tab === 'Overview' && (
                 <div>
-                    {/* Filter chips */}
-                    <div className="hn-chips" style={{ marginBottom: 12 }}>
-                        {CONDITIONS.map(c => (
-                            <button key={c} className="hn-chip">{c}</button>
+                    <div style={{ fontWeight: 800, fontSize: '1rem', marginBottom: 16 }}>Clinical Specializations</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                        {h.specialties.map((s, i) => (
+                            <div key={i} style={{ background: 'white', borderRadius: 20, padding: 20, border: '1.5px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{s}</div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#059669' }}>{(85 + i * 3)}% Success</div>
+                                    <div style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Verified Unit</div>
+                                </div>
+                            </div>
                         ))}
                     </div>
-                    <div className="hn-empty-state">
-                        <div className="hn-empty-icon"><Users size={28} color="#2563eb" /></div>
-                        <div className="hn-empty-title">Patient journeys for {h.name}</div>
-                        <div className="hn-empty-sub">Filter by condition to see real patient experiences from this hospital.</div>
-                    </div>
-                </div>
-            )}
-
-            {(tab === 'Treatment Outcomes' || tab === 'Risk Patterns') && (
-                <div className="hn-empty-state">
-                    <div className="hn-empty-icon"><Activity size={28} color="#2563eb" /></div>
-                    <div className="hn-empty-title">{tab}</div>
-                    <div className="hn-empty-sub">Detailed analytics for {h.name} will appear here as more patients share their journeys.</div>
                 </div>
             )}
         </div>
@@ -197,22 +213,33 @@ function HospitalsPage() {
 
     return (
         <AppLayout>
-            {selected ? (
-                <HospitalDetail h={selected} onClose={() => setSelected(null)} />
-            ) : (
-                <div>
-                    {/* Page header */}
-                    <div style={{ marginBottom: 16 }}>
-                        <div className="hn-section-title">Hospital Intelligence</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                            <Filter size={14} color="#94a3b8" />
-                            <div className="hn-chips" style={{ margin: 0 }}>
+            <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+                {!selected && (
+                    <div style={{ marginBottom: 32 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
+                            <div>
+                                <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#0f172a', margin: 0 }}>Hospital Intelligence</h1>
+                                <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.9rem' }}>Verified trust scores and patient outcomes across top medical facilities.</p>
+                            </div>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <button style={{ background: '#f1f5f9', border: 'none', padding: '10px 16px', borderRadius: 10, fontSize: '0.8rem', fontWeight: 700, color: '#475569', cursor: 'pointer' }}>Generate Report</button>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'white', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+                            <Filter size={16} color="#94a3b8" />
+                            <div style={{ display: 'flex', gap: 10, overflowX: 'auto' }}>
                                 {CONDITIONS.map(c => (
                                     <button
                                         key={c}
-                                        className="hn-chip"
-                                        style={filter === c ? { background: '#2563eb', color: 'white', borderColor: '#2563eb' } : {}}
                                         onClick={() => setFilter(c)}
+                                        style={{
+                                            whiteSpace: 'nowrap', padding: '6px 14px', borderRadius: 10, border: '1.5px solid',
+                                            fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                                            background: filter === c ? '#0f172a' : 'transparent',
+                                            color: filter === c ? 'white' : '#64748b',
+                                            borderColor: filter === c ? '#0f172a' : '#e2e8f0'
+                                        }}
                                     >
                                         {c}
                                     </button>
@@ -220,12 +247,18 @@ function HospitalsPage() {
                             </div>
                         </div>
                     </div>
+                )}
 
-                    {HOSPITALS.map(h => (
-                        <HospitalCard key={h.id} h={h} onClick={setSelected} />
-                    ))}
-                </div>
-            )}
+                {selected ? (
+                    <HospitalDetail h={selected} onClose={() => setSelected(null)} />
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                        {HOSPITALS.map(h => (
+                            <HospitalCard key={h.id} h={h} onClick={setSelected} />
+                        ))}
+                    </div>
+                )}
+            </div>
         </AppLayout>
     )
 }

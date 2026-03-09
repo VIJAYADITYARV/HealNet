@@ -21,10 +21,16 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
             return;
         }
 
-        const userExists = await User.findOne({ $or: [{ email }, { phone }] });
+        // Fix: Only build the query with provided identifiers to avoid matching 'null/undefined'
+        const query: any[] = [];
+        if (email) query.push({ email });
+        if (phone) query.push({ phone });
+        if (req.body.username) query.push({ username: req.body.username });
+
+        const userExists = query.length > 0 ? await User.findOne({ $or: query }) : null;
 
         if (userExists) {
-            res.status(400).json({ message: 'User already exists' });
+            res.status(400).json({ message: 'User with this email, phone or username already exists' });
             return;
         }
 
@@ -72,7 +78,16 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, phone, password } = req.body;
 
-        const user = await User.findOne({ $or: [{ email }, { phone }] });
+        const query: any[] = [];
+        if (email) query.push({ email });
+        if (phone) query.push({ phone });
+
+        if (query.length === 0) {
+            res.status(400).json({ message: 'Email or Phone is required' });
+            return;
+        }
+
+        const user = await User.findOne({ $or: query });
 
         if (user && (await bcrypt.compare(password, user.password as string))) {
             res.json({

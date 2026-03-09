@@ -28,54 +28,77 @@ function EditModal({ exp, onClose, onSave }) {
 
     const handleSubmit = e => {
         e.preventDefault()
-        onSave(exp._id, formData)
+        if (window.confirm('Save changes to your health record?')) {
+            onSave(exp._id, formData)
+        }
     }
 
     return (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-            <div style={{ background: 'white', padding: 24, borderRadius: 12, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a' }}>Edit Experience</h3>
-                    <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}><X size={20} /></button>
-                </div>
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+            <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 20, width: '100%', maxWidth: 500, overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', animation: 'slideIn 0.2s ease' }}>
+                <div style={{ padding: '24px', background: '#f8fafc', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: 4 }}>Condition</label>
-                        <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" name="condition" value={formData.condition} onChange={handleChange} required />
+                        <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>Edit Journey Entry</h3>
+                        <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#64748b' }}>Make sure your medical details are up to date.</p>
                     </div>
-                    <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: 4 }}>Hospital</label>
-                        <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" name="hospital" value={formData.hospital} onChange={handleChange} />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: 4 }}>Treatment</label>
-                        <textarea className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" name="treatment" value={formData.treatment} onChange={handleChange} />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: 4 }}>Outcome</label>
-                        <select className="shadow border rounded w-full py-2 px-3 text-gray-700" name="outcome" value={formData.outcome} onChange={handleChange}>
-                            <option value="success">Success</option>
-                            <option value="improvement">Improved</option>
-                            <option value="ongoing">Ongoing</option>
-                            <option value="no improvement">No Change</option>
-                            <option value="complication">Complication</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: 4 }}>Recovery Time</label>
-                        <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" name="recoveryTime" value={formData.recoveryTime} onChange={handleChange} />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: 4 }}>Description</label>
-                        <textarea className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 min-h-[80px]" name="description" value={formData.description} onChange={handleChange} />
-                    </div>
-                    <button type="submit" style={{ background: '#2563eb', color: 'white', border: 'none', padding: '10px', borderRadius: 8, cursor: 'pointer', marginTop: 12, fontWeight: 600 }}>
-                        Save Changes
+                    <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                        <X size={18} color="#64748b" />
                     </button>
+                </div>
+
+                <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div>
+                        <label style={labelStyleSmall}>Condition / Diagnosis</label>
+                        <input name="condition" value={formData.condition} onChange={handleChange} required style={inputStyleSmall} />
+                    </div>
+                    <div>
+                        <label style={labelStyleSmall}>Hospital & Facility</label>
+                        <input name="hospital" value={formData.hospital} onChange={handleChange} style={inputStyleSmall} />
+                    </div>
+                    <div>
+                        <label style={labelStyleSmall}>Treatment Protocol</label>
+                        <textarea name="treatment" value={formData.treatment} onChange={handleChange} style={{ ...inputStyleSmall, height: 80, resize: 'none' }} />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                        <div>
+                            <label style={labelStyleSmall}>Recovery Outcome</label>
+                            <select name="outcome" value={formData.outcome} onChange={handleChange} style={inputStyleSmall}>
+                                <option value="success">Success</option>
+                                <option value="improvement">Improved</option>
+                                <option value="ongoing">Ongoing</option>
+                                <option value="no improvement">No Change</option>
+                                <option value="complication">Complication</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style={labelStyleSmall}>Recovery Duration</label>
+                            <input name="recoveryTime" value={formData.recoveryTime} onChange={handleChange} style={inputStyleSmall} />
+                        </div>
+                    </div>
+                    <div>
+                        <label style={labelStyleSmall}>Personal Reflection</label>
+                        <textarea name="description" value={formData.description} onChange={handleChange} style={{ ...inputStyleSmall, height: 80, resize: 'none' }} />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+                        <button type="button" onClick={onClose} style={{ flex: 1, padding: '12px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: 'white', fontWeight: 700, cursor: 'pointer' }}>
+                            Discard
+                        </button>
+                        <button type="submit" style={{ flex: 2, padding: '12px', borderRadius: 12, border: 'none', background: '#2563eb', color: 'white', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(37,99,235,0.3)' }}>
+                            Update Record
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
     )
+}
+
+const labelStyleSmall = { display: 'block', fontSize: '0.72rem', fontWeight: 800, color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.02em' }
+const inputStyleSmall = {
+    width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0',
+    fontSize: '0.85rem', fontFamily: 'inherit', color: '#0f172a', outline: 'none',
+    transition: 'all 0.2s', background: '#f8fafc', boxSizing: 'border-box'
 }
 
 function TimelineCard({ exp, isLast, onDelete, onEdit }) {

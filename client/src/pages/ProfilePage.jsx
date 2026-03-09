@@ -1,10 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getPublicProfile } from '../features/profile/profileSlice';
 import AppLayout from '../components/layout/AppLayout';
-import { MapPin, Mail, Phone, Calendar, Shield, MessageSquare, Verified, Award, Share2, Heart, Star, CheckCircle } from 'lucide-react';
+import {
+    MapPin, Mail, Phone, Calendar, Shield, MessageSquare,
+    Verified, Award, Share2, Heart, Star, CheckCircle,
+    QrCode, X, AlertTriangle, Download
+} from 'lucide-react';
 import { ExperienceCard } from '../components/ExperienceCard';
+import { QRCodeSVG } from 'qrcode.react';
 
 function ProfilePage() {
     const { username } = useParams();
@@ -12,6 +17,8 @@ function ProfilePage() {
     const dispatch = useDispatch();
     const { publicProfile, isLoading, isError, message: profileError } = useSelector((state) => state.profile);
     const { user: currentUser } = useSelector((state) => state.auth);
+
+    const [showQRModal, setShowQRModal] = useState(false);
 
     useEffect(() => {
         if (username) {
@@ -69,6 +76,8 @@ function ProfilePage() {
         { label: 'Trust Points', value: user.credentialPoints || 0, icon: <Award size={18} />, color: '#8b5cf6' },
     ];
 
+    const emergencyUrl = `${window.location.origin}/emergency/${user._id}`;
+
     return (
         <AppLayout>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -116,6 +125,14 @@ function ProfilePage() {
 
                         {/* Action Buttons */}
                         <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '16px', gap: '12px' }}>
+                            {isMe && (
+                                <button
+                                    onClick={() => setShowQRModal(true)}
+                                    style={{ border: '1.5px solid #e2e8f0', background: '#f8fafc', padding: '8px 20px', borderRadius: '10px', fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+                                >
+                                    <QrCode size={18} /> My Medical ID
+                                </button>
+                            )}
                             {isMe ? (
                                 <button
                                     onClick={() => navigate('/settings')}
@@ -283,6 +300,51 @@ function ProfilePage() {
                     </div>
                 </div>
             </div>
+
+            {/* QR MODAL */}
+            {showQRModal && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                    <div style={{ background: 'white', borderRadius: 24, width: '100%', maxWidth: 450, overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', animation: 'modalScale 0.2s ease' }}>
+                        <div style={{ padding: '24px', background: '#dc2626', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <AlertTriangle size={24} />
+                                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>Medical ID QR Code</h3>
+                            </div>
+                            <button onClick={() => setShowQRModal(false)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', width: 32, height: 32, borderRadius: 8, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div style={{ padding: 40, textAlign: 'center' }}>
+                            <div style={{ background: 'white', padding: 20, borderRadius: 20, display: 'inline-block', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', marginBottom: 24 }}>
+                                <QRCodeSVG value={emergencyUrl} size={200} level="H" includeMargin={true} />
+                            </div>
+
+                            <h4 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>{user.name}</h4>
+                            <p style={{ margin: '8px 0 24px', fontSize: '0.85rem', color: '#64748b', lineHeight: '1.5' }}>
+                                First responders can scan this code to see your allergies, conditions, and emergency contact details.
+                            </p>
+
+                            <div style={{ display: 'flex', gap: 12 }}>
+                                <button onClick={() => window.print()} style={{ flex: 1, padding: '12px', borderRadius: 12, border: '1.5px solid #e2e8f0', background: '#f8fafc', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                    <Download size={16} /> Save Image
+                                </button>
+                                <button onClick={() => setShowQRModal(false)} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: '#0f172a', color: 'white', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style={{ padding: '16px 24px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', textAlign: 'center', fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600 }}>
+                            ONLY CRITICAL MEDICAL DATA IS SHARED THROUGH THIS PAGE.
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <style>{`
+                @keyframes modalScale { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+            `}</style>
         </AppLayout>
     );
 }

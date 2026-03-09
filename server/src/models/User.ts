@@ -26,6 +26,14 @@ export interface IUser extends Document {
         lifestyleIndicators?: string[];
         aiPersonalizationEnabled?: boolean;
     };
+    healthLogs: {
+        _id?: string;
+        recordType: string;
+        value: string;
+        unit?: string;
+        date?: Date;
+        notes?: string;
+    }[];
     createdAt: Date;
 }
 
@@ -55,6 +63,13 @@ const UserSchema: Schema = new Schema({
         lifestyleIndicators: [{ type: String }],
         aiPersonalizationEnabled: { type: Boolean, default: false }
     },
+    healthLogs: [{
+        recordType: { type: String, required: true },
+        value: { type: String, required: true },
+        unit: { type: String },
+        date: { type: Date, default: Date.now },
+        notes: { type: String }
+    }],
     createdAt: { type: Date, default: Date.now },
 });
 

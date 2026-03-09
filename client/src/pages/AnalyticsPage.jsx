@@ -144,7 +144,7 @@ function AnalyticsPage() {
                         </div>
                     </div>
 
-                    {/* Charts Row 2 */}
+                    {/* Top Hospitals */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         {/* Top Conditions */}
                         <div style={{
@@ -166,24 +166,41 @@ function AnalyticsPage() {
                             </ResponsiveContainer>
                         </div>
 
-                        {/* Top Hospitals */}
+                        {/* Optimization Intelligence */}
                         <div style={{
-                            background: 'white', borderRadius: 14, padding: 20, height: 320,
-                            border: '1px solid #e2e8f0', boxShadow: '0 2px 15px -3px rgba(37,99,235,0.07)',
+                            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                            borderRadius: 14, padding: 24, color: 'white',
+                            boxShadow: '0 4px 20px -5px rgba(15,23,42,0.3)',
+                            display: 'flex', flexDirection: 'column', justifyContent: 'center'
                         }}>
-                            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a', marginBottom: 12 }}>
-                                Top Mentioned Hospitals
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                                <Activity size={20} color="#3b82f6" />
+                                <span style={{ fontSize: '0.7rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94a3b8' }}>
+                                    Engine Optimization Protocol
+                                </span>
                             </div>
-                            <ResponsiveContainer width="100%" height="85%">
-                                <BarChart data={data.charts.topHospitals}
-                                    margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} />
-                                    <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
-                                    <Tooltip />
-                                    <Bar dataKey="value" fill="#059669" name="Mentions" radius={[4, 4, 0, 0]} />
-                                </BarChart>
-                            </ResponsiveContainer>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 16 }}>Health Data Processing Efficiency</h3>
+                            <p style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: 1.6, marginBottom: 20 }}>
+                                Our core intelligence layer utilizes advanced optimization techniques to provide real-time clinical synthesis:
+                            </p>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                {[
+                                    'Sparse Conditional Constant Propagation',
+                                    'Constant Folding',
+                                    'Dead Code Elimination',
+                                    'Common Subexpression Elimination'
+                                ].map(tech => (
+                                    <div key={tech} style={{
+                                        background: 'rgba(255,255,255,0.05)', padding: '8px 12px',
+                                        borderRadius: 8, fontSize: '0.7rem', fontWeight: 600, border: '1px solid rgba(255,255,255,0.1)'
+                                    }}>
+                                        {tech}
+                                    </div>
+                                ))}
+                            </div>
+                            <p style={{ fontSize: '0.7rem', color: '#64748b', marginTop: 20, fontWeight: 700, fontStyle: 'italic' }}>
+                                "These optimizations improve execution speed and reduce unnecessary computation for global scale."
+                            </p>
                         </div>
                     </div>
                 </div>

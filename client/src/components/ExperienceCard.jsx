@@ -27,8 +27,9 @@ const AVATAR_COLORS = [
     ['#d97706', '#fbbf24'], ['#dc2626', '#f87171'],
 ]
 function avatarColor(str = '') {
-    const i = str.charCodeAt(0) % AVATAR_COLORS.length
-    return AVATAR_COLORS[i]
+    const s = String(str || '')
+    const i = s.length > 0 ? (s.charCodeAt(0) % AVATAR_COLORS.length) : 0
+    return AVATAR_COLORS[i] || AVATAR_COLORS[0]
 }
 
 function simScore(exp) {
@@ -158,6 +159,54 @@ export function ExperienceCard({ exp }) {
                         ) : (
                             <span className="font-bold text-gray-800 mr-2">{authorName}</span>
                         )}
+
+                        {/* Message Button Integration */}
+                        {!isAnon && user && exp.userId?._id !== user._id && (
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    navigate(`/messages?user=${exp.userId?._id}`, {
+                                        state: {
+                                            initialUser: {
+                                                _id: exp.userId?._id,
+                                                name: authorName,
+                                                username: authorUsername,
+                                                profilePicture: exp.userId?.profilePicture
+                                            }
+                                        }
+                                    });
+                                }}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
+                                    padding: '4px 10px',
+                                    borderRadius: '6px',
+                                    background: '#eff6ff',
+                                    color: '#2563eb',
+                                    border: '1px solid #bfdbfe',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    marginLeft: '10px',
+                                    transition: 'all 0.2s',
+                                    fontFamily: 'inherit'
+                                }}
+                                onMouseOver={e => {
+                                    e.currentTarget.style.background = '#2563eb';
+                                    e.currentTarget.style.color = 'white';
+                                }}
+                                onMouseOut={e => {
+                                    e.currentTarget.style.background = '#eff6ff';
+                                    e.currentTarget.style.color = '#2563eb';
+                                }}
+                            >
+                                <Send size={12} />
+                                Message
+                            </button>
+                        )}
+
                         <span className="hn-feed-condition">{exp.condition}</span>
                         <span className={`hn-outcome-badge ${outcome.cls} ml-auto`}>{outcome.label}</span>
                     </div>

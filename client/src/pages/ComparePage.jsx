@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import axios from 'axios'
 import AppLayout from '../components/layout/AppLayout'
-import { Search, MapPin, Building2, Activity, ArrowRight, BarChart3 } from 'lucide-react'
+import { Search, MapPin, Building2, Activity, ArrowRight, BarChart3, Brain, Sparkles, Loader2 } from 'lucide-react'
 
 const ComparePage = () => {
     const { user } = useSelector((state) => state.auth)
@@ -17,6 +17,10 @@ const ComparePage = () => {
     const [loading, setLoading] = useState(false)
     const [comparisonResult, setComparisonResult] = useState(null)
     const [error, setError] = useState('')
+
+    // AI Insight States
+    const [aiInsight, setAiInsight] = useState(null)
+    const [aiLoading, setAiLoading] = useState(false)
 
     const handleAddToList = (e) => {
         if (e.key === 'Enter' && inputValue.trim() !== '') {
@@ -40,11 +44,12 @@ const ComparePage = () => {
     const handleCompare = async (e) => {
         e.preventDefault();
         if (comparisonList.length < 2) {
-            setError('Please add at least 2 items to compare.')
+            setError('Please add at least 2 items to compare.');
             return;
         }
         setError('');
         setLoading(true);
+        setAiInsight(null);
 
         try {
             const payload = {
@@ -62,6 +67,26 @@ const ComparePage = () => {
             setError(err.response?.data?.message || 'Comparison failed.');
         } finally {
             setLoading(false);
+        }
+    }
+
+    const fetchAiInsight = async () => {
+        if (!comparisonResult || comparisonResult.length < 2) return;
+        setAiLoading(true);
+        try {
+            const res = await axios.post('/api/ai/hospital-compare', {
+                hospitalA: comparisonResult[0],
+                hospitalB: comparisonResult[1],
+                condition: condition
+            }, {
+                headers: { Authorization: `Bearer ${user?.token}` }
+            });
+            setAiInsight(res.data.insight);
+        } catch (err) {
+            console.error("AI Insight Error:", err);
+            setAiInsight("Unable to generate expert recommendation at this time.");
+        } finally {
+            setAiLoading(false);
         }
     }
 
@@ -280,8 +305,39 @@ const ComparePage = () => {
                             </div>
                         ))}
                     </div>
+
+                    {/* AI COMPARISON ADVISOR SECTION */}
+                    <div style={{ padding: 24, background: '#f8fafc' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                            <div style={{ background: '#2563eb', color: 'white', padding: 6, borderRadius: 8 }}>
+                                <Brain size={18} />
+                            </div>
+                            <span style={{ fontWeight: 900, color: '#1e3a8a', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>HealNet AI Advisor</span>
+                        </div>
+                        {aiLoading ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#2563eb' }}>
+                                <Loader2 size={16} className="animate-spin" />
+                                <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Consulting clinical data...</span>
+                            </div>
+                        ) : aiInsight ? (
+                            <p style={{ margin: 0, fontSize: '0.95rem', color: '#1e3a8a', lineHeight: 1.6, fontWeight: 700 }}>
+                                {aiInsight}
+                            </p>
+                        ) : (
+                            <button
+                                onClick={fetchAiInsight}
+                                style={{ background: 'white', border: '1.5px solid #2563eb', color: '#2563eb', padding: '10px 16px', borderRadius: 10, fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+                            >
+                                <Sparkles size={14} /> Get Expert AI Recommendation
+                            </button>
+                        )}
+                    </div>
                 </div>
             )}
+            <style>{`
+                .animate-spin { animation: spin 1s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            `}</style>
         </AppLayout>
     )
 }

@@ -47,10 +47,11 @@ app.use((req, res, next) => {
 // ── 2. Security headers ────────────────────────────────────────
 app.use(helmet({ xssFilter: false }));
 
-// ── 4. Rate Limiting ───────────────────────────────────────────
+// ── 4. Rate Limiting (Disabled for Dev) ───────────────────────────
+/*
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5000, // increased drastically to avoid 429
+  max: 5000, 
   message: 'Too many requests from this IP, please try again after 15 minutes'
 });
 
@@ -71,6 +72,7 @@ app.use('/api/auth', authLimiter);
 app.use('/api/query', queryLimiter);
 app.use('/api/ai/query', queryLimiter);
 app.use('/api/voice', queryLimiter);
+*/
 
 // ── 5. Routes ──────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);

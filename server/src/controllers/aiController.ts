@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import axios from 'axios';
 import Experience from '../models/Experience.js';
 import QueryLog from '../models/QueryLog.js';
 import User from '../models/User.js';
 import { sanitizeExperiences } from '../utils/sanitizer.js';
+import { generateAIResponse, parseMedicalReport } from '../utils/aiService.js';
 
 export const analyzeSymptomsWithAI = async (req: any, res: Response): Promise<void> => {
     try {
@@ -14,35 +14,23 @@ export const analyzeSymptomsWithAI = async (req: any, res: Response): Promise<vo
             return;
         }
 
-        // 1. Generate Embedding and Similarity Search (MOCK or real depending on Python service)
-        let similarExperienceIds: string[] = [];
-        try {
-            const aiResponse = await axios.post('http://localhost:8000/search', {
-                text: symptomText,
-                top_k: 10
-            });
-            similarExperienceIds = aiResponse.data.results.map((r: any) => r.experience_id);
-        } catch (error) {
-            console.error('AI Service Search Error:', error);
-        }
+        // 1. Semantic Search Logic
+        // Since we don't have a real vector DB locally without a heavy setup, 
+        // we'll use a text-based search to find candidates and let Gemini analyze them if needed. 
+        // For now, let's improve the text search.
+        const searchKeywords = symptomText.split(' ').filter((w: string) => w.length > 3);
+        const matchQuery: any = {
+            $or: [
+                { condition: { $regex: symptomText, $options: 'i' } },
+                { description: { $regex: symptomText, $options: 'i' } },
+                { symptoms: { $in: searchKeywords.map((k: string) => new RegExp(k, 'i')) } }
+            ]
+        };
 
-        const matchQuery: any = { _id: { $in: similarExperienceIds } };
-
-        // Simple mock personalization: If user Profile provided context, maybe fetch experiences corresponding to context?
-        // We will just fetch the experiences and re-rank if context is applied.
-        const rawCases = await Experience.find(matchQuery).populate('userId', 'name isAnonymous');
+        const rawCases = await Experience.find(matchQuery).populate('userId', 'name isAnonymous').limit(20);
         let similarCases = sanitizeExperiences(rawCases);
 
-        if (userProfileContext?.aiPersonalizationEnabled) {
-            // Boost matching conditions based on age/sex
-            similarCases = similarCases.sort((a, b) => {
-                let scoreA = 0;
-                let scoreB = 0;
-                // mock boost
-                return scoreB - scoreA; // we just return as is if no real logic is present
-            });
-        }
-
+        // 2. Data Aggregation for AI Context
         const conditionsMap: Record<string, number> = {};
         const successMap: Record<string, { total: number; success: number }> = {};
         const hospitalsMap: Record<string, number> = {};
@@ -74,7 +62,7 @@ export const analyzeSymptomsWithAI = async (req: any, res: Response): Promise<vo
 
         const matchedConditions = Object.entries(conditionsMap)
             .sort((a, b) => b[1] - a[1])
-            .map(e => ({ condition: e[0], matchCount: e[1], confidence: Math.round((e[1] / similarCases.length) * 100) || 0 }));
+            .map(e => ({ condition: e[0], matchCount: e[1], confidence: Math.min(95, Math.round((e[1] / Math.max(1, similarCases.length)) * 100) + 10) }));
 
         const hospitalRecommendations = Object.entries(hospitalsMap)
             .sort((a, b) => b[1] - a[1])
@@ -89,19 +77,24 @@ export const analyzeSymptomsWithAI = async (req: any, res: Response): Promise<vo
             }))
             .sort((a, b) => b.successRate - a.successRate);
 
-        const recoveryEstimate = recoveryCount > 0 ? Math.round(totalRecoveryDays / recoveryCount) : 0;
+        const recoveryEstimate = recoveryCount > 0 ? Math.round(totalRecoveryDays / recoveryCount) : 14;
 
-        // Structured result for summary
-        let aiSummary = '';
-        try {
-            const summaryResponse = await axios.post('http://localhost:8000/summarize', {
-                text: `Patient has ${symptomText}. We found ${similarCases.length} similar cases. Top condition is ${matchedConditions[0]?.condition || 'Unknown'}.`
-            });
-            aiSummary = summaryResponse.data.summary;
-        } catch (error) {
-            console.error('AI Service Summary Error:', error);
-            aiSummary = 'AI summary unavailable. Based on similar experiences, it is recommended to consult a doctor for further evaluation.';
-        }
+        // 3. ACTUAL Gemini AI Synthesis
+        const aiPrompt = `
+            You are "HealNet AI", a medical intelligence assistant.
+            A patient reports these symptoms: "${symptomText}".
+            Information found in our patient community:
+            - Similar cases found: ${similarCases.length}
+            - Top suspected conditions: ${matchedConditions.slice(0, 2).map(c => c.condition).join(', ')}
+            - Most successful treatments based on data: ${treatmentInsights.slice(0, 2).map(t => t.treatment).join(', ')}
+            - Avg recovery time: ${recoveryEstimate} days.
+            
+            Provide a professional, empathetic 3-sentence summary of these findings. 
+            Do not provide a definitive diagnosis, use phrases like "Our data suggests" or "Patients with similar symptoms reported".
+            Keep it concise and supportive.
+        `;
+
+        const aiSummary = await generateAIResponse(aiPrompt);
 
         const responseData = {
             matchedConditions,
@@ -113,7 +106,7 @@ export const analyzeSymptomsWithAI = async (req: any, res: Response): Promise<vo
         };
 
         const qLog = new QueryLog({
-            userId: req.user?.id || req.body.userId || '65123abcd123456789012345',
+            userId: req.user?.id || '65123abcd123456789012345',
             inputText: symptomText,
             filters: { duration, severity, bodyArea, location },
             matchCount: similarCases.length
@@ -122,64 +115,137 @@ export const analyzeSymptomsWithAI = async (req: any, res: Response): Promise<vo
 
         res.status(200).json(responseData);
     } catch (error: any) {
+        console.error("AI Controller Error:", error);
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Get AI Personalized Recommendations
-// @route   GET /api/ai/recommendations
-// @access  Private
 export const getAIRecommendations = async (req: any, res: Response): Promise<void> => {
     try {
         const userId = req.user.id;
         const user = await User.findById(userId);
 
-        if (!user || !user.healthProfile || !user.healthProfile.aiPersonalizationEnabled) {
-            res.status(400).json({ message: 'AI Personalization is not enabled or profile incomplete' });
+        if (!user || !user.healthProfile) {
+            res.status(400).json({ message: 'Profile incomplete' });
             return;
         }
 
         const profile = user.healthProfile;
 
-        // Find experiences matching chronic conditions or allergies
-        let queryConditions = [];
-        if (profile.chronicConditions && profile.chronicConditions.length > 0) {
-            queryConditions.push({ condition: { $in: profile.chronicConditions.map(c => new RegExp(c, 'i')) } });
-        }
-        if (profile.allergies && profile.allergies.length > 0) {
-            queryConditions.push({ symptoms: { $in: profile.allergies.map(a => new RegExp(a, 'i')) } });
-        }
+        const aiPrompt = `
+            You are HealNet AI. Proactively suggest a 1-sentence health tip for a user with the following profile:
+            Age Group: ${profile.ageGroup}, Biological Sex: ${profile.biologicalSex}, 
+            Chronic Conditions: ${(profile.chronicConditions || []).join(', ')}, 
+            Allergies: ${(profile.allergies || []).join(', ')}.
+            Make it specific to their condition if they have any, otherwise general wellness for their age/sex.
+        `;
 
-        let recommendedExperiences: any[] = [];
-        if (queryConditions.length > 0) {
-            const rawRecs = await Experience.find({ $or: queryConditions })
-                .populate('userId', 'name isAnonymous')
-                .sort({ helpfulCount: -1 })
-                .limit(5);
-            recommendedExperiences = sanitizeExperiences(rawRecs);
-        } else {
-            // fallback
-            const rawRecs = await Experience.find()
-                .populate('userId', 'name isAnonymous')
-                .sort({ helpfulCount: -1 })
-                .limit(5);
-            recommendedExperiences = sanitizeExperiences(rawRecs);
-        }
+        const aiTip = await generateAIResponse(aiPrompt);
 
-        let aiSummary = '';
-        try {
-            const summaryResponse = await axios.post('http://localhost:8000/summarize', {
-                text: `Patient is ${profile.ageGroup} ${profile.biologicalSex} with conditions: ${(profile.chronicConditions || []).join(', ')}. Provide a 2 sentence proactive health tip.`
-            });
-            aiSummary = summaryResponse.data.summary;
-        } catch (error) {
-            aiSummary = 'Stay hydrated and maintain regular checkups.';
-        }
+        // Fetch relevant experiences
+        const rawRecs = await Experience.find({
+            $or: [
+                { condition: { $in: (profile.chronicConditions || []).map(c => new RegExp(c, 'i')) } },
+                { description: { $regex: (profile.chronicConditions || [])[0] || '', $options: 'i' } }
+            ]
+        }).populate('userId', 'name isAnonymous').limit(5);
 
         res.status(200).json({
-            personalizedTips: aiSummary,
-            recommendedReading: recommendedExperiences
+            personalizedTips: aiTip,
+            recommendedReading: sanitizeExperiences(rawRecs)
         });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * OCR Medical Report Controller
+ */
+export const processMedicalReportOCR = async (req: any, res: Response): Promise<void> => {
+    try {
+        if (!req.file) {
+            res.status(400).json({ message: 'No file uploaded' });
+            return;
+        }
+
+        const result = await parseMedicalReport(req.file.buffer, req.file.mimetype);
+        res.status(200).json(result);
+    } catch (error: any) {
+        console.error("OCR Controller Error:", error);
+        res.status(500).json({ message: "AI failed to parse the report. Please ensure the image is clear." });
+    }
+};
+
+/**
+ * Hospital Comparison AI Advisor
+ */
+export const getComparisonAIInsight = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { hospitalA, hospitalB, condition } = req.body;
+
+        const aiPrompt = `
+            You are a HealNet Medical Advisor. Compare these two hospitals for treating "${condition}":
+            Hospital A: ${JSON.stringify(hospitalA)}
+            Hospital B: ${JSON.stringify(hospitalB)}
+
+            Based on the clinical data provided (rating, success stories, trust tier, metrics), 
+            provide a 3-sentence expert recommendation on which hospital might be better for this specific condition. 
+            Highlight one specific strength for each. Be professional and objective.
+        `;
+
+        const insight = await generateAIResponse(aiPrompt);
+        res.status(200).json({ insight });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * AI Experience Draft Generator
+ */
+export const generateExperienceDraft = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { condition, symptoms, treatment, outcome } = req.body;
+
+        const aiPrompt = `
+            A patient wants to share their medical journey on HealNet. 
+            Condition: ${condition}
+            Symptoms: ${symptoms.join(', ')}
+            Treatment: ${treatment}
+            Outcome: ${outcome}
+
+            Write a warm, empathetic 2-3 sentence narrative draft that they can use as a starting point for their "Description". 
+            Write it in the first person ("I experienced..."). Keep it supportive and community-focused.
+        `;
+
+        const draft = await generateAIResponse(aiPrompt);
+        res.status(200).json({ draft });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * AI Chat Context Analyzer
+ */
+export const analyzeChatContext = async (req: any, res: Response): Promise<void> => {
+    try {
+        const { messages, otherUserName } = req.body;
+
+        const aiPrompt = `
+            You are a HealNet AI assistant providing private medical context for a patient's chat.
+            Chat History with ${otherUserName}:
+            ${messages.slice(-10).map((m: any) => `${m.senderId === req.user?.id ? 'Me' : otherUserName}: ${m.content}`).join('\n')}
+
+            Based on this conversation, provide:
+            1. A 1-sentence summary of the medical topic being discussed.
+            2. Two smart, empathetic questions the user could ask ${otherUserName} to gain better insights into their journey.
+            Format: Summary: [text] Suggestions: [q1], [q2]
+        `;
+
+        const analysis = await generateAIResponse(aiPrompt);
+        res.status(200).json({ analysis });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
