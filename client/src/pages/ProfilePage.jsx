@@ -83,17 +83,19 @@ function ProfilePage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {/* ── Premium Profile Header ── */}
                 <div style={{
-                    background: 'white', borderRadius: '20px', overflow: 'hidden',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0'
+                    background: 'var(--card-bg)', borderRadius: 'var(--radius-card)', overflow: 'hidden',
+                    boxShadow: 'var(--shadow-card)', border: '1px solid var(--card-border)',
+                    backdropFilter: 'blur(20px)'
                 }}>
                     {/* Banner */}
                     <div style={{
-                        height: '160px',
-                        background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                        height: '180px',
+                        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
                         position: 'relative'
                     }}>
-                        <div style={{ position: 'absolute', bottom: '12px', right: '20px', display: 'flex', gap: '8px' }}>
-                            <button style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px', padding: '6px 12px', color: 'white', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', backdropFilter: 'blur(4px)', cursor: 'pointer' }}>
+                        <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+                        <div style={{ position: 'absolute', bottom: '16px', right: '24px', display: 'flex', gap: '10px' }}>
+                            <button style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '8px 16px', color: 'white', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', backdropFilter: 'blur(10px)', cursor: 'pointer', transition: 'all 0.2s' }}>
                                 <Share2 size={14} /> Share Profile
                             </button>
                         </div>
@@ -196,34 +198,38 @@ function ProfilePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                     {stats.map((stat, i) => (
                         <div key={i} style={{
-                            background: 'white', padding: '20px', borderRadius: '16px',
-                            border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '16px'
+                            background: 'var(--card-bg)', padding: '24px', borderRadius: 'var(--radius-card)',
+                            border: '1px solid var(--card-border)', display: 'flex', alignItems: 'center', gap: '16px',
+                            backdropFilter: 'blur(20px)', boxShadow: 'var(--shadow-card)'
                         }}>
                             <div style={{
-                                width: '40px', height: '40px', borderRadius: '12px', background: `${stat.color}15`,
-                                color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                width: '48px', height: '48px', borderRadius: '14px', background: `${stat.color}10`,
+                                color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                border: `1px solid ${stat.color}20`
                             }}>
                                 {stat.icon}
                             </div>
                             <div>
-                                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1e293b' }}>{stat.value}</div>
-                                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stat.label}</div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>{stat.value}</div>
+                                <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{stat.label}</div>
                             </div>
                         </div>
                     ))}
                     <div style={{
-                        background: 'white', padding: '20px', borderRadius: '16px',
-                        border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '16px'
+                        background: 'var(--card-bg)', padding: '24px', borderRadius: 'var(--radius-card)',
+                        border: '1px solid var(--card-border)', display: 'flex', alignItems: 'center', gap: '16px',
+                        backdropFilter: 'blur(20px)', boxShadow: 'var(--shadow-card)'
                     }}>
                         <div style={{
-                            width: '40px', height: '40px', borderRadius: '12px', background: '#f59e0b15',
-                            color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            width: '48px', height: '48px', borderRadius: '14px', background: '#f59e0b10',
+                            color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            border: '1px solid #f59e0b20'
                         }}>
-                            <Award size={18} />
+                            <Award size={20} />
                         </div>
                         <div>
-                            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#1e293b', textTransform: 'capitalize' }}>{user.contributorBadge || 'New Member'}</div>
-                            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Reliability Tier</div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--text-primary)', textTransform: 'capitalize', letterSpacing: '-0.01em' }}>{user.contributorBadge || 'New Member'}</div>
+                            <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Reliability Tier</div>
                         </div>
                     </div>
                 </div>

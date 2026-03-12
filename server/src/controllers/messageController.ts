@@ -1,4 +1,5 @@
-import { Request, Response } from 'express';
+import mongoose from 'mongoose';
+import { Response } from 'express';
 import Message from '../models/Message.js';
 import User from '../models/User.js';
 
@@ -71,12 +72,18 @@ export const getConversation = async (req: any, res: Response): Promise<void> =>
 // @access  Private
 export const getConversationsList = async (req: any, res: Response): Promise<void> => {
     try {
-        const currentUserId = req.user.id;
+        const userIdStr = (req.user._id || req.user.id).toString();
+        const userId = new mongoose.Types.ObjectId(userIdStr);
+
+        console.log(`[Messages] Fetching conversations for user: ${userIdStr}`);
 
         const latestMessages = await Message.aggregate([
             {
                 $match: {
-                    $or: [{ senderId: currentUserId }, { receiverId: currentUserId }]
+                    $or: [
+                        { senderId: userId },
+                        { receiverId: userId }
+                    ]
                 }
             },
             {
@@ -86,20 +93,48 @@ export const getConversationsList = async (req: any, res: Response): Promise<voi
                 $group: {
                     _id: {
                         $cond: [
-                            { $eq: ["$senderId", currentUserId] },
+                            { $eq: ["$senderId", userId] },
                             "$receiverId",
                             "$senderId"
                         ]
                     },
-                    message: { $first: "$$ROOT" }
+                    lastMsgId: { $first: "$_id" }
                 }
             }
         ]);
 
-        await User.populate(latestMessages, { path: "message.senderId", select: "name username profilePicture" });
-        await User.populate(latestMessages, { path: "message.receiverId", select: "name username profilePicture" });
+        console.log(`[Messages] Found ${latestMessages.length} unique conversation partners`);
 
-        res.status(200).json(latestMessages.map(m => m.message));
+        if (latestMessages.length === 0) {
+            res.status(200).json([]);
+            return;
+        }
+
+        const msgIds = latestMessages.map(m => m.lastMsgId);
+        const conversations = await Message.find({ _id: { $in: msgIds } })
+            .populate('senderId', 'name username profilePicture')
+            .populate('receiverId', 'name username profilePicture')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json(conversations);
+    } catch (error: any) {
+        console.error("Get Conv List Error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * Get Suggested Users to Message
+ */
+export const getSuggestedUsers = async (req: any, res: Response): Promise<void> => {
+    try {
+        // Find users that are not the current user
+        const currentUserId = req.user.id;
+        const suggestions = await User.find({ _id: { $ne: currentUserId } })
+            .select('name username profilePicture')
+            .limit(10);
+
+        res.status(200).json(suggestions);
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

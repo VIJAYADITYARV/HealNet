@@ -9,7 +9,7 @@ import { toggleHelpful } from '../features/experiences/experienceSlice'
 import {
     Shield, Heart, Bookmark, ChevronDown, Users,
     ChevronRight, Zap, MessageCircle, Star,
-    Flame, Sparkles, UserPlus, Brain, Loader2
+    Flame, Sparkles, UserPlus, Brain, Loader2, Activity
 } from 'lucide-react'
 import { CardSkeleton } from '../components/Skeleton'
 
@@ -48,18 +48,20 @@ function CommunityCard({ exp }) {
     }
 
     return (
-        <div className="hn-feed-card" style={{ border: '1.5px solid #e2e8f0', borderRadius: 20, padding: 20, background: 'white' }}>
+        <div className="hn-feed-card" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-card)', padding: 24, background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(20px)', boxShadow: 'var(--shadow-card)' }}>
             <div className="hn-feed-card-top" style={{ marginBottom: 16 }}>
-                <div className="hn-feed-avatar" style={{ background: exp.isAnonymous ? '#f1f5f9' : 'linear-gradient(135deg, #2563eb, #7c3aed)', color: exp.isAnonymous ? '#64748b' : 'white', borderRadius: 14 }}>
-                    {exp.isAnonymous ? <Shield size={18} /> : initials}
+                <div className="hn-feed-avatar" style={{ background: exp.isAnonymous ? '#f8fafc' : 'linear-gradient(135deg, #2563eb, #7c3aed)', color: exp.isAnonymous ? '#94a3b8' : 'white', borderRadius: 16, width: 48, height: 48, border: '1px solid var(--border)' }}>
+                    {exp.isAnonymous ? <Shield size={20} /> : initials}
                 </div>
                 <div className="hn-feed-meta">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a' }}>{exp.isAnonymous ? 'Anonymous Patient' : exp.userId?.name}</span>
-                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#2563eb', background: '#eff6ff', padding: '2px 8px', borderRadius: 20 }}>{exp.condition}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{exp.isAnonymous ? 'Anonymous Member' : exp.userId?.name}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.65rem', fontWeight: 800, color: '#059669', background: '#ecfdf5', padding: '4px 10px', borderRadius: 20, border: '1px solid #d1fae5' }}>
+                            <Activity size={10} /> Verified Journey
+                        </div>
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 2 }}>
-                        Shared in {exp.hospital || 'Private Clinic'} • {new Date(exp.createdAt).toLocaleDateString()}
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>
+                        {exp.condition} • {exp.hospital || 'Private Clinic'} • {new Date(exp.createdAt).toLocaleDateString()}
                     </div>
                 </div>
             </div>

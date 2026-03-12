@@ -84,24 +84,40 @@ function ExperienceFeed() {
 
     return (
         <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div className="hn-section-title" style={{ margin: 0 }}>Patient Journeys</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div className="hn-section-title" style={{ margin: 0, fontSize: '0.82rem', letterSpacing: '0.05em', opacity: 0.8 }}>PATIENT JOURNEYS</div>
             </div>
 
             {/* Filter chips by outcome */}
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
-                <Filter size={13} color="#64748b" style={{ marginTop: 4 }} />
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20, alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                    <Filter size={12} color="var(--text-muted)" />
+                </div>
                 {OUTCOME_FILTERS.map(f => (
                     <button
                         key={f}
                         onClick={() => { setActiveOutcome(f); setPage(1) }}
                         style={{
-                            padding: '4px 12px', borderRadius: 999, fontSize: '0.73rem', fontWeight: 600,
-                            border: '1.5px solid',
-                            borderColor: activeOutcome === f ? '#2563eb' : '#e2e8f0',
-                            background: activeOutcome === f ? '#2563eb' : 'white',
-                            color: activeOutcome === f ? 'white' : '#475569',
-                            cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'inherit',
+                            padding: '6px 14px', borderRadius: 12, fontSize: '0.73rem', fontWeight: 600,
+                            border: '1px solid',
+                            borderColor: activeOutcome === f ? 'var(--blue-trust)' : 'var(--border)',
+                            background: activeOutcome === f ? 'var(--blue-trust)' : 'var(--card-bg)',
+                            color: activeOutcome === f ? 'white' : 'var(--text-secondary)',
+                            cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', fontFamily: 'inherit',
+                            boxShadow: activeOutcome === f ? '0 4px 12px rgba(37, 99, 235, 0.25)' : 'none',
+                            backdropFilter: 'blur(10px)'
+                        }}
+                        onMouseOver={e => {
+                            if (activeOutcome !== f) {
+                                e.currentTarget.style.borderColor = 'var(--blue-trust)';
+                                e.currentTarget.style.background = 'var(--blue-light)';
+                            }
+                        }}
+                        onMouseOut={e => {
+                            if (activeOutcome !== f) {
+                                e.currentTarget.style.borderColor = 'var(--border)';
+                                e.currentTarget.style.background = 'var(--card-bg)';
+                            }
                         }}
                     >
                         {OUTCOME_LABELS[f]}

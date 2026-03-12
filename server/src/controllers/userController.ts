@@ -181,7 +181,7 @@ export const deleteHealthLog = async (req: any, res: Response): Promise<void> =>
 
 export const getPublicEmergencyInfo = async (req: Request, res: Response) => {
     try {
-        const user = await User.findById(req.params.id).select('name phone healthProfile email');
+        const user = await User.findById(req.params.id).select('name phone healthProfile email'); // added email for visibility
         if (!user) {
             res.status(404).json({ message: 'User not found' });
             return;
@@ -189,5 +189,37 @@ export const getPublicEmergencyInfo = async (req: Request, res: Response) => {
         res.status(200).json(user);
     } catch (error: any) {
         res.status(400).json({ message: 'Invalid ID or user not found' });
+    }
+};
+
+// @desc    Search users for messaging
+// @route   GET /api/users/search
+// @access  Private
+export const searchUsers = async (req: any, res: Response): Promise<void> => {
+    try {
+        const query = req.query.q;
+        if (!query || query.length < 2) {
+            res.status(200).json([]);
+            return;
+        }
+
+        const users = await User.find({
+            $and: [
+                { _id: { $ne: req.user.id } }, // Don't include self
+                { isAnonymous: false }, // Only show non-anonymous users
+                {
+                    $or: [
+                        { name: { $regex: query, $options: 'i' } },
+                        { username: { $regex: query, $options: 'i' } }
+                    ]
+                }
+            ]
+        })
+            .select('name username profilePicture')
+            .limit(10);
+
+        res.status(200).json(users);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
     }
 };

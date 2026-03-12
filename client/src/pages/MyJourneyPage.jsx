@@ -113,42 +113,46 @@ function TimelineCard({ exp, isLast, onDelete, onEdit }) {
                     width: 36, height: 36, borderRadius: '50%',
                     background: cfg.bg, display: 'flex', alignItems: 'center',
                     justifyContent: 'center', border: `2px solid ${cfg.color}`, flexShrink: 0,
+                    boxShadow: `0 0 15px ${cfg.bg}`, zIndex: 2
                 }}>
                     <OutcomeIcon size={16} color={cfg.color} />
                 </div>
                 {!isLast && (
                     <div style={{
-                        width: 2, flex: 1, background: '#e2e8f0',
+                        width: 2, flex: 1, background: 'var(--border)',
                         marginTop: 4, marginBottom: 4, minHeight: 24,
                     }} />
                 )}
             </div>
 
             {/* Card content */}
-            <div className="hn-feed-card" style={{ flex: 1, marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                    <div>
-                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0f172a' }}>{exp.condition}</div>
-                        <div style={{ display: 'flex', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
+            <div className="hn-feed-card" style={{ flex: 1, marginBottom: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)', marginBottom: 4 }}>{exp.condition}</div>
+                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                             {exp.hospital && (
-                                <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                    <Building2 size={11} /> {exp.hospital}
+                                <span style={{ fontSize: '0.73rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <Building2 size={12} /> {exp.hospital}
                                 </span>
                             )}
                             {exp.city && (
-                                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>📍 {exp.city}</span>
+                                <span style={{ fontSize: '0.73rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    📍 {exp.city}
+                                </span>
                             )}
                         </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <span style={{
-                            display: 'inline-block', padding: '2px 10px', borderRadius: 999,
-                            background: cfg.bg, color: cfg.color, fontSize: '0.72rem', fontWeight: 700,
+                            display: 'inline-flex', padding: '4px 12px', borderRadius: 999,
+                            background: cfg.bg, color: cfg.color, fontSize: '0.7rem', fontWeight: 800,
+                            border: `1px solid ${cfg.color}33`, textTransform: 'uppercase', letterSpacing: '0.02em'
                         }}>
                             {cfg.label}
                         </span>
-                        <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: 3, display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
-                            <Calendar size={10} />
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>
+                            <Calendar size={11} />
                             {new Date(exp.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </div>
                     </div>
@@ -156,63 +160,65 @@ function TimelineCard({ exp, isLast, onDelete, onEdit }) {
 
                 <div className="hn-data-block">
                     <div>
-                        <div className="hn-data-item-lbl">Treatment</div>
+                        <div className="hn-data-item-lbl">💊 Treatment</div>
                         <div className="hn-data-item-val">{exp.treatment || '—'}</div>
                     </div>
                     <div>
-                        <div className="hn-data-item-lbl">Recovery</div>
+                        <div className="hn-data-item-lbl">⏱ Recovery</div>
                         <div className="hn-data-item-val" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <Clock size={11} color="#64748b" />{exp.recoveryTime || '—'}
+                            {exp.recoveryTime || '—'}
                         </div>
                     </div>
                     {exp.costRange && (
                         <div>
-                            <div className="hn-data-item-lbl">Cost</div>
-                            <div className="hn-data-item-val">{exp.costRange}</div>
+                            <div className="hn-data-item-lbl">💰 Cost Approx</div>
+                            <div className="hn-data-item-val">₹{Number(exp.costRange).toLocaleString('en-IN')}</div>
                         </div>
                     )}
                 </div>
 
                 {exp.description && (
-                    <p style={{ fontSize: '0.82rem', color: '#475569', lineHeight: 1.6, margin: '8px 0 0' }}>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: '12px 0' }}>
                         {exp.description.slice(0, 200)}{exp.description.length > 200 ? '…' : ''}
                     </p>
                 )}
 
                 {exp.symptoms?.length > 0 && (
-                    <div className="hn-feed-chips" style={{ marginTop: 8 }}>
-                        {exp.symptoms.slice(0, 4).map((s, i) => (
+                    <div className="hn-feed-chips" style={{ marginBottom: 12 }}>
+                        {exp.symptoms.slice(0, 5).map((s, i) => (
                             <span key={i} className="hn-feed-chip">{s}</span>
                         ))}
                     </div>
                 )}
 
-                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-                        👍 {exp.helpfulCount || 0} people found this helpful
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid var(--border)', marginTop: 8 }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                        ❤️ {exp.helpfulCount || 0} supporters
                     </span>
-                    <div style={{ display: 'flex', gap: 12 }}>
+                    <div style={{ display: 'flex', gap: 8 }}>
                         <button
                             onClick={() => onEdit(exp)}
                             style={{
-                                background: 'none', border: 'none', color: '#2563eb',
-                                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-                                fontSize: '0.75rem', padding: 4
+                                display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 12px', borderRadius: 8,
+                                background: 'white', border: '1px solid var(--border)', fontSize: '0.72rem', fontWeight: 700,
+                                color: 'var(--blue-trust)', cursor: 'pointer', transition: 'all 0.2s'
                             }}
+                            onMouseOver={e => { e.currentTarget.style.borderColor = 'var(--blue-trust)'; e.currentTarget.style.background = 'var(--blue-light)' }}
+                            onMouseOut={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'white' }}
                         >
                             <Edit2 size={12} /> Edit
                         </button>
                         <button
                             onClick={() => {
-                                if (window.confirm('Are you sure you want to delete this experience?')) {
-                                    onDelete(exp._id)
-                                }
+                                if (window.confirm('Delete this record entry permanently?')) { onDelete(exp._id) }
                             }}
                             style={{
-                                background: 'none', border: 'none', color: '#ef4444',
-                                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-                                fontSize: '0.75rem', padding: 4
+                                display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 12px', borderRadius: 8,
+                                background: 'white', border: '1px solid var(--border)', fontSize: '0.72rem', fontWeight: 700,
+                                color: '#ef4444', cursor: 'pointer', transition: 'all 0.2s'
                             }}
+                            onMouseOver={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.background = '#fef2f2' }}
+                            onMouseOut={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'white' }}
                         >
                             <Trash2 size={12} /> Delete
                         </button>

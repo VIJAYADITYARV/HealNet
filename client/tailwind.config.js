@@ -1,3 +1,4 @@
+// Force rebuild tailwind JIT watcher
 /** @type {import('tailwindcss').Config} */
 export default {
     content: [

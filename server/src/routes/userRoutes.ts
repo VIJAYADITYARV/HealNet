@@ -7,11 +7,14 @@ import {
     createHealthLog,
     updateHealthLog,
     deleteHealthLog,
-    getPublicEmergencyInfo
+    getPublicEmergencyInfo,
+    searchUsers
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+router.get('/search', protect as any, searchUsers as any);
 
 router.get('/profile', protect as any, getUserProfile as any);
 router.patch('/anonymous-mode', protect as any, toggleAnonymousMode as any);

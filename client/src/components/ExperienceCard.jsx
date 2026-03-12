@@ -5,7 +5,7 @@ import { toggleHelpful } from '../features/experiences/experienceSlice'
 import { toggleSaveInsight } from '../features/insights/insightsSlice'
 import { addLike, removeLike } from '../features/likes/likesSlice'
 import { useNavigate, Link } from 'react-router-dom'
-import { Shield, Heart, Bookmark, Users, ChevronRight, ThumbsUp, MessageSquare, Send, Trash2 } from 'lucide-react'
+import { Shield, Heart, Bookmark, Users, ChevronRight, ThumbsUp, MessageSquare, Send, Trash2, Brain } from 'lucide-react'
 
 /* Outcome badge styling */
 const OUTCOME_MAP = {
@@ -145,94 +145,63 @@ export function ExperienceCard({ exp }) {
 
     return (
         <div className="hn-feed-card">
-            {/* Top row */}
-            <div className="hn-feed-card-top">
+            {/* ── Header Row ── */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                 <div className="hn-feed-avatar" style={{ background: `linear-gradient(135deg, ${c1}, ${c2})` }}>
                     {initials}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         {authorUsername ? (
-                            <Link to={`/profile/${authorUsername}`} className="font-bold text-gray-800 hover:text-blue-600 transition-colors mr-2">
+                            <Link to={`/profile/${authorUsername}`} style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)', textDecoration: 'none', transition: 'color 0.15s' }}
+                                onMouseOver={e => e.target.style.color = 'var(--blue-trust)'}
+                                onMouseOut={e => e.target.style.color = 'var(--text-primary)'}>
                                 {authorName}
                             </Link>
                         ) : (
-                            <span className="font-bold text-gray-800 mr-2">{authorName}</span>
+                            <span style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)' }}>{authorName}</span>
                         )}
 
-                        {/* Message Button Integration */}
                         {!isAnon && user && exp.userId?._id !== user._id && (
                             <button
                                 onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
+                                    e.preventDefault(); e.stopPropagation();
                                     navigate(`/messages?user=${exp.userId?._id}`, {
-                                        state: {
-                                            initialUser: {
-                                                _id: exp.userId?._id,
-                                                name: authorName,
-                                                username: authorUsername,
-                                                profilePicture: exp.userId?.profilePicture
-                                            }
-                                        }
+                                        state: { initialUser: { _id: exp.userId?._id, name: authorName, username: authorUsername, profilePicture: exp.userId?.profilePicture } }
                                     });
                                 }}
                                 style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '5px',
-                                    padding: '4px 10px',
-                                    borderRadius: '6px',
-                                    background: '#eff6ff',
-                                    color: '#2563eb',
-                                    border: '1px solid #bfdbfe',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 700,
-                                    cursor: 'pointer',
-                                    marginLeft: '10px',
-                                    transition: 'all 0.2s',
-                                    fontFamily: 'inherit'
+                                    display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 6,
+                                    background: 'rgba(37,99,235,0.06)', color: 'var(--blue-trust)', border: '1px solid rgba(37,99,235,0.15)',
+                                    fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s'
                                 }}
-                                onMouseOver={e => {
-                                    e.currentTarget.style.background = '#2563eb';
-                                    e.currentTarget.style.color = 'white';
-                                }}
-                                onMouseOut={e => {
-                                    e.currentTarget.style.background = '#eff6ff';
-                                    e.currentTarget.style.color = '#2563eb';
-                                }}
+                                onMouseOver={e => { e.currentTarget.style.background = 'var(--blue-trust)'; e.currentTarget.style.color = 'white' }}
+                                onMouseOut={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.06)'; e.currentTarget.style.color = 'var(--blue-trust)' }}
                             >
-                                <Send size={12} />
-                                Message
+                                <Send size={10} /> Message
                             </button>
                         )}
 
-                        <span className="hn-feed-condition">{exp.condition}</span>
-                        <span className={`hn-outcome-badge ${outcome.cls} ml-auto`}>{outcome.label}</span>
+                        {isAnon && <span className="hn-feed-anon"><Shield size={11} /> Anonymous</span>}
+                        <span style={{ marginLeft: 'auto', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                            {new Date(exp.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                        </span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                         {exp.hospital && (
-                            <button
-                                className="hn-feed-hospital"
-                                onClick={() => navigate('/hospitals')}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                            >
+                            <button className="hn-feed-hospital" onClick={() => navigate('/hospitals')} style={{ background: 'none', border: 'none', padding: 0 }}>
                                 🏥 {exp.hospital}
                             </button>
                         )}
-                        {exp.city && (
-                            <span style={{ fontSize: '0.73rem', color: '#64748b' }}>📍 {exp.city}</span>
-                        )}
-                        {isAnon && (
-                            <span className="hn-feed-anon">
-                                <Shield size={11} /> Anonymous
-                            </span>
-                        )}
+                        {exp.city && <span style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>📍 {exp.city}</span>}
                     </div>
                 </div>
-                <span style={{ fontSize: '0.72rem', color: '#94a3b8', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                    {new Date(exp.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                </span>
+            </div>
+
+            {/* ── Condition Tag Row ── */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <span className="hn-feed-condition">{exp.condition}</span>
+                <span className={`hn-outcome-badge ${outcome.cls}`}>{outcome.label}</span>
             </div>
 
             {/* Symptom chips */}
@@ -242,36 +211,36 @@ export function ExperienceCard({ exp }) {
                         <span key={i} className="hn-feed-chip">{s}</span>
                     ))}
                     {exp.symptoms.length > 5 && (
-                        <span className="hn-feed-chip" style={{ background: '#f1f5f9', color: '#64748b' }}>
+                        <span className="hn-feed-chip" style={{ background: '#f1f5f9', color: 'var(--text-muted)' }}>
                             +{exp.symptoms.length - 5} more
                         </span>
                     )}
                 </div>
             )}
 
-            {/* Structured data block */}
+            {/* ── Structured Data Block ── */}
             <div className="hn-data-block">
                 <div>
-                    <div className="hn-data-item-lbl">Treatment</div>
+                    <div className="hn-data-item-lbl">💊 Treatment</div>
                     <div className="hn-data-item-val">{exp.treatment || '—'}</div>
                 </div>
                 <div>
-                    <div className="hn-data-item-lbl">Recovery</div>
-                    <div className="hn-data-item-val">{exp.recoveryTime || '—'}</div>
+                    <div className="hn-data-item-lbl">⏱ Recovery</div>
+                    <div className="hn-data-item-val">{exp.recoveryTime || '—'} {exp.recoveryTime && typeof exp.recoveryTime === 'number' ? 'days' : ''}</div>
                 </div>
                 {exp.costRange && (
                     <div>
-                        <div className="hn-data-item-lbl">Cost Range</div>
-                        <div className="hn-data-item-val">{exp.costRange}</div>
+                        <div className="hn-data-item-lbl">💰 Cost Approx</div>
+                        <div className="hn-data-item-val">₹{Number(exp.costRange).toLocaleString('en-IN')}</div>
                     </div>
                 )}
             </div>
 
             {/* Expandable description */}
             {exp.description && (
-                <div style={{ marginBottom: 8 }}>
+                <div style={{ marginBottom: 12 }}>
                     <p style={{
-                        fontSize: '0.85rem', color: '#475569', lineHeight: 1.6, margin: 0,
+                        fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0,
                         overflow: expanded ? 'visible' : 'hidden',
                         display: '-webkit-box', WebkitLineClamp: expanded ? 'unset' : 2,
                         WebkitBoxOrient: 'vertical',
@@ -281,9 +250,9 @@ export function ExperienceCard({ exp }) {
                     <button
                         onClick={() => setExpanded(p => !p)}
                         style={{
-                            background: 'none', border: 'none', color: '#2563eb',
+                            background: 'none', border: 'none', color: 'var(--blue-trust)',
                             fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
-                            padding: '2px 0', display: 'flex', alignItems: 'center', gap: 3,
+                            padding: '4px 0', display: 'flex', alignItems: 'center', gap: 3,
                         }}
                     >
                         {expanded ? 'Show less' : 'Read full journey'}
@@ -292,53 +261,59 @@ export function ExperienceCard({ exp }) {
                 </div>
             )}
 
-            {/* Trust footer & Engagement */}
-            <div className="hn-feed-footer flex-wrap gap-y-2">
-                <button
-                    className={`hn-footer-btn flex-1 min-w-[max-content] helpful ${helpful ? 'active' : ''}`}
-                    onClick={handleHelpful}
-                >
+            {/* ── Engagement Footer ── */}
+            <div className="hn-feed-footer flex-wrap gap-x-2">
+                <button className={`hn-footer-btn helpful ${helpful ? 'active' : ''}`} onClick={handleHelpful}>
                     <Heart size={14} fill={helpful ? 'currentColor' : 'none'} />
                     {exp.helpfulCount > 0 ? `${exp.helpfulCount} ` : ''}Helpful
                 </button>
 
                 <button
-                    className={`hn-footer-btn flex-1 min-w-[max-content] ${liked ? 'active text-blue-600 bg-blue-50 border-blue-200' : ''}`}
+                    className={`hn-footer-btn ${liked ? 'active' : ''}`}
                     onClick={handleLike}
+                    style={liked ? { background: 'var(--blue-light)', color: 'var(--blue-trust)', border: '1px solid var(--blue-mid)' } : {}}
                 >
                     <ThumbsUp size={14} fill={liked ? 'currentColor' : 'none'} />
                     {localLikeCount > 0 ? `${localLikeCount} ` : ''}Like
                 </button>
 
-                <button
-                    className="hn-footer-btn flex-1 min-w-[max-content]"
-                    onClick={toggleComments}
-                >
-                    <MessageSquare size={14} fill={showComments ? 'currentColor' : 'none'} className={showComments ? 'text-blue-600' : ''} />
+                <button className="hn-footer-btn" onClick={toggleComments} style={showComments ? { background: 'var(--blue-light)', color: 'var(--blue-trust)', border: '1px solid var(--blue-mid)' } : {}}>
+                    <MessageSquare size={14} fill={showComments ? 'currentColor' : 'none'} />
                     {localCommentCount > 0 ? `${localCommentCount} ` : ''}Comment
                 </button>
 
-                <button
-                    className={`hn-footer-btn flex-1 min-w-[max-content] ${saved ? 'active' : ''}`}
-                    onClick={handleSave}
-                >
+                <button className={`hn-footer-btn ${saved ? 'active' : ''}`} onClick={handleSave}>
                     <Bookmark size={12} fill={saved ? 'currentColor' : 'none'} />
                     {saved ? 'Saved' : 'Save'}
                 </button>
-                <button
-                    className="hn-footer-btn"
-                    onClick={() => navigate(`/search?condition=${encodeURIComponent(exp.condition)}`)}
-                >
-                    <Users size={12} />
-                    Similar Cases
+
+                <button className="hn-footer-btn" onClick={() => navigate(`/search?condition=${encodeURIComponent(exp.condition)}`)}>
+                    <Users size={12} /> Similar
                 </button>
 
                 {/* Match score */}
-                <div className="hn-match-score">
-                    <span className="hn-match-label">{score}% match</span>
-                    <div className="hn-match-bar">
-                        <div className="hn-match-fill" style={{ width: `${score}%` }} />
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--blue-trust)' }}>{score}% match</span>
+                    <div style={{ width: 40, height: 4, background: 'var(--border)', borderRadius: 999, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${score}%`, background: 'linear-gradient(90deg, #2563eb, #10b981)', borderRadius: 999 }} />
                     </div>
+                </div>
+
+                {/* AI Interactive Button */}
+                <div style={{ width: '100%', marginTop: '0.6rem' }}>
+                    <button
+                        onClick={() => navigate(`/ai-symptom-check?q=${encodeURIComponent(exp.condition)}`)}
+                        style={{
+                            width: '100%', background: 'linear-gradient(135deg, #1e293b, #0f172a)', border: '1px solid #334155',
+                            borderRadius: '10px', padding: '10px', color: '#38bdf8', fontSize: '0.75rem', fontWeight: 700,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer',
+                            boxShadow: '0 4px 15px -3px rgba(15,23,42,0.5)', transition: 'all 0.2s', fontFamily: 'inherit'
+                        }}
+                        onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                        onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                    >
+                        <Brain size={16} color="#38bdf8" /> AI Clinical Overview for {exp.condition}
+                    </button>
                 </div>
             </div>
 

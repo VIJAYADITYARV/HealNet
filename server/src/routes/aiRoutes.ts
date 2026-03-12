@@ -6,7 +6,8 @@ import {
     processMedicalReportOCR,
     getComparisonAIInsight,
     generateExperienceDraft,
-    analyzeChatContext
+    analyzeChatContext,
+    getAICommunityTrends
 } from '../controllers/aiController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -29,5 +30,6 @@ router.post('/scan-report', protect as any, upload.single('report'), processMedi
 router.post('/hospital-compare', protect as any, getComparisonAIInsight as any);
 router.post('/experience-draft', protect as any, generateExperienceDraft as any);
 router.post('/chat-context', protect as any, analyzeChatContext as any);
+router.get('/trends', protect as any, getAICommunityTrends as any);
 
 export default router;

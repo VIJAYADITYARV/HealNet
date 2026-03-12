@@ -20,6 +20,7 @@ const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const MessagesPage = lazy(() => import('./pages/MessagesPage'))
 const EmergencyViewPage = lazy(() => import('./pages/EmergencyViewPage'))
+const LandingPage = lazy(() => import('./pages/LandingPage'))
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           }>
             <Routes>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/welcome" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/share-experience" element={<ExperiencePage />} />

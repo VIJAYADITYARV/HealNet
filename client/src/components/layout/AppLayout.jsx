@@ -1,6 +1,7 @@
 import Navbar from './Navbar'
 import LeftSidebar from './LeftSidebar'
 import RightSidebar from './RightSidebar'
+import EmergencySOS from '../EmergencySOS'
 
 function AppLayout({ children }) {
     return (
@@ -13,6 +14,7 @@ function AppLayout({ children }) {
                 </main>
                 <RightSidebar />
             </div>
+            <EmergencySOS />
         </div>
     )
 }

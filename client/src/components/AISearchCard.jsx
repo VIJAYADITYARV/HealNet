@@ -33,11 +33,18 @@ function AISearchCard() {
     return (
         <div className="hn-ai-card" onClick={() => textareaRef.current?.focus()}>
             {/* Header label */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                <Sparkles size={14} color="#2563eb" />
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    AI Symptom Check
-                </span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Sparkles size={14} color="#2563eb" className={text ? 'animate-pulse' : ''} />
+                    <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                        AI Neural Search
+                    </span>
+                </div>
+                {text && (
+                    <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>
+                        Ready for analysis
+                    </div>
+                )}
             </div>
 
             {/* Main input */}

@@ -26,6 +26,7 @@ function SearchPage() {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const { results, aiInsight, isLoading, isError, message, pages } = useSelector((state) => state.search)
+    const { user: currentUser } = useSelector((state) => state.auth)
 
     // Debounced search effect
     useEffect(() => {
@@ -227,11 +228,27 @@ function SearchPage() {
                                     </div>
 
                                     <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-600">
-                                                {exp.userId?.name?.[0] || 'U'}
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-600">
+                                                    {exp.userId?.name?.[0] || 'U'}
+                                                </div>
+                                                <span className="text-[11px] font-bold text-gray-400">{exp.userId?.name || 'Anonymous Patient'}</span>
                                             </div>
-                                            <span className="text-[11px] font-bold text-gray-400">{exp.userId?.name || 'Anonymous Patient'}</span>
+                                            {!exp.isAnonymous && exp.userId?._id !== currentUser?._id && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate(`/messages?user=${exp.userId?._id}`, {
+                                                            state: { initialUser: { _id: exp.userId?._id, name: exp.userId?.name, username: exp.userId?.username } }
+                                                        });
+                                                    }}
+                                                    className="p-1.5 hover:bg-blue-50 text-blue-500 rounded-lg transition-colors"
+                                                    title="Message User"
+                                                >
+                                                    <MessageSquare size={14} />
+                                                </button>
+                                            )}
                                         </div>
                                         <button
                                             onClick={(e) => handleReport(e, exp)}

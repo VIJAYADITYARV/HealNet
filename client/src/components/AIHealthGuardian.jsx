@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { Brain, Sparkles, Heart, ShieldCheck, ChevronRight, Loader2 } from 'lucide-react'
 
 const AIHealthGuardian = () => {
+    const navigate = useNavigate()
     const { user } = useSelector((state) => state.auth)
     const [tip, setTip] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -77,7 +79,10 @@ const AIHealthGuardian = () => {
                         </div>
                     </div>
 
-                    <button className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white p-4 rounded-2xl transition-all border border-white/10 self-center group-hover:translate-x-1">
+                    <button
+                        onClick={() => navigate('/health-profile')}
+                        className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white p-4 rounded-2xl transition-all border border-white/10 self-center group-hover:translate-x-1"
+                    >
                         <ChevronRight size={24} strokeWidth={3} />
                     </button>
                 </div>

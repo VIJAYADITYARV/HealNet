@@ -6,6 +6,30 @@ import AppLayout from '../components/layout/AppLayout';
 import { Send, User as UserIcon, Search, MessageSquare, Shield, CheckCheck, MoreVertical, Paperclip, Smile, Brain, Sparkles, Loader2, Info } from 'lucide-react';
 import axios from 'axios';
 
+const MOCK_USERS = [
+    { _id: 'mock-ai', name: 'Dr. HealNet AI', username: 'medical_assistant', isAI: true, bio: 'Advanced Medical Diagnosis Core', profilePicture: null },
+    { _id: 'mock-sarah', name: 'Sarah Miller', username: 'sarah_m', bio: 'Recovering from ACL Surgery', profilePicture: null },
+    { _id: 'mock-james', name: 'James Wilson', username: 'james_w', bio: 'Chronic Migraine Patient', profilePicture: null },
+];
+
+const MOCK_CONVERSATIONS = [
+    {
+        _id: 'conv-1', senderId: MOCK_USERS[0], receiverId: null,
+        content: "Hello! I noticed your recent recovery update. Would you like a clinical analysis of your progress?",
+        createdAt: new Date(Date.now() - 3600000).toISOString(), isMock: true
+    },
+    {
+        _id: 'conv-2', senderId: MOCK_USERS[1], receiverId: null,
+        content: "Hi there, I saw your post about physiotherapy. Which clinic did you visit in Chennai?",
+        createdAt: new Date(Date.now() - 7200000).toISOString(), isMock: true
+    },
+    {
+        _id: 'conv-3', senderId: MOCK_USERS[2], receiverId: null,
+        content: "Your journey with migraines really resonated with me. Stay strong!",
+        createdAt: new Date(Date.now() - 86400000).toISOString(), isMock: true
+    }
+];
+
 function MessagesPage() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -22,9 +46,18 @@ function MessagesPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const messagesEndRef = useRef(null);
 
+    // Simulated Real-time State
+    const [mockMessages, setMockMessages] = useState({}); // { userId: [messages] }
+    const [isTyping, setIsTyping] = useState(false);
+
     // AI Messaging Assistant State
     const [aiAnalysis, setAiAnalysis] = useState(null);
     const [aiLoading, setAiLoading] = useState(false);
+
+    // Global User Search State
+    const [globalUsers, setGlobalUsers] = useState([]);
+    const [suggestedUsers, setSuggestedUsers] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
 
     useEffect(() => {
         if (!currentUser) {
@@ -33,37 +66,119 @@ function MessagesPage() {
         }
         dispatch(getConversationsList());
 
+        // Fetch suggested users (Guru, Sabari, etc)
+        const fetchSuggested = async () => {
+            try {
+                const res = await axios.get('/api/messages/suggested', {
+                    headers: { Authorization: `Bearer ${currentUser?.token}` }
+                });
+                setSuggestedUsers(res.data);
+            } catch (err) {
+                console.error("Failed to fetch suggested users", err);
+            }
+        }
+        fetchSuggested();
+
         return () => {
             dispatch(resetMessages());
         };
     }, [dispatch, currentUser, navigate]);
 
+    // Merge Real and Mock Conversations
+    let displayConversations = [...conversations];
+
+    // Inject active user into sidebar if no conversation exists yet
+    if (activeUser && !activeUser._id.startsWith('mock-')) {
+        const hasConv = conversations.some(c =>
+            (c.senderId?._id === activeUser._id) || (c.receiverId?._id === activeUser._id) ||
+            (c.senderId === activeUser._id) || (c.receiverId === activeUser._id)
+        );
+        if (!hasConv) {
+            displayConversations = [{
+                _id: 'temp-' + activeUser._id,
+                senderId: activeUser,
+                receiverId: currentUser,
+                content: 'Start a new conversation...',
+                createdAt: new Date().toISOString(),
+                isTemp: true
+            }, ...displayConversations];
+        }
+    }
+
+    // Always show mock conversations for demo purposes
+    displayConversations = [...displayConversations, ...MOCK_CONVERSATIONS];
+
+    useEffect(() => {
+        const searchTimer = setTimeout(async () => {
+            if (searchTerm.length >= 2) {
+                setIsSearching(true);
+                try {
+                    const res = await axios.get(`/api/users/search?q=${searchTerm}`, {
+                        headers: { Authorization: `Bearer ${currentUser?.token}` }
+                    });
+
+                    // Filter out users we already see in the sidebar (real or temp)
+                    const existingUserIds = displayConversations.map(c => {
+                        const other = (c.senderId?._id || c.senderId) === currentUser?._id ? (c.receiverId?._id || c.receiverId) : (c.senderId?._id || c.senderId);
+                        return other?._id || other;
+                    });
+
+                    setGlobalUsers(res.data.filter(u => !existingUserIds.includes(u._id)));
+                } catch (err) {
+                    console.error("User search failed", err);
+                } finally {
+                    setIsSearching(false);
+                }
+            } else {
+                setGlobalUsers([]);
+            }
+        }, 400);
+
+        return () => clearTimeout(searchTimer);
+    }, [searchTerm, currentUser?.token, displayConversations]);
+
     useEffect(() => {
         if (initialUserId) {
             handleSelectConversation(initialUserId);
         }
-    }, [initialUserId, conversations.length]); // Re-run if conversations load
+    }, [initialUserId, conversations.length]);
 
-    const handleSelectConversation = async (userId) => {
+    const handleSelectConversation = async (userId, userObj = null) => {
         if (userId !== initialUserId) {
             navigate(`/messages?user=${userId}`);
         }
-        dispatch(getConversation(userId));
 
-        // 1. Try to find user in existing conversations
-        const conv = conversations.find(c =>
-            (c.senderId?._id === userId) || (c.receiverId?._id === userId)
-        );
-
-        if (conv) {
-            const u = conv.senderId?._id === userId ? conv.senderId : conv.receiverId;
-            setActiveUser(u);
-        } else if (passedUser && passedUser._id === userId) {
-            // 2. Use user info passed via navigation state (best for new conversations)
-            setActiveUser(passedUser);
+        const isMock = userId.startsWith('mock-');
+        if (isMock) {
+            const user = MOCK_USERS.find(u => u._id === userId);
+            setActiveUser(user);
         } else {
-            // 3. Last resort fallback
-            setActiveUser({ _id: userId, name: 'Patient', username: 'user', profilePicture: null });
+            // Check if we already have the user details
+            if (userObj) {
+                setActiveUser(userObj);
+            } else if (passedUser && passedUser._id === userId) {
+                setActiveUser(passedUser);
+            } else {
+                // Try to find in existing conversations, suggestions or global search
+                const existingConv = displayConversations.find(c =>
+                    (c.senderId?._id === userId) || (c.receiverId?._id === userId) ||
+                    (c.senderId === userId) || (c.receiverId === userId)
+                );
+                const other = existingConv ? ((existingConv.senderId?._id || existingConv.senderId) === currentUser?._id ? (existingConv.receiverId?._id ? existingConv.receiverId : existingConv.receiverId) : (existingConv.senderId?._id ? existingConv.senderId : existingConv.senderId)) : null;
+                const suggestion = suggestedUsers.find(u => u._id === userId);
+                const global = globalUsers.find(u => u._id === userId);
+
+                if (other && typeof other === 'object') {
+                    setActiveUser(other);
+                } else if (suggestion) {
+                    setActiveUser(suggestion);
+                } else if (global) {
+                    setActiveUser(global);
+                } else {
+                    setActiveUser({ _id: userId, name: 'Patient', username: 'user', profilePicture: null });
+                }
+            }
+            dispatch(getConversation(userId));
         }
     };
 
@@ -71,9 +186,56 @@ function MessagesPage() {
         e.preventDefault();
         if (!msgText.trim() || !activeUser) return;
 
-        dispatch(sendMessage({ receiverId: activeUser._id, content: msgText }));
-        setMsgText('');
-        setAiAnalysis(null); // Clear analysis after sending
+        const isMock = activeUser._id.startsWith('mock-');
+
+        if (isMock) {
+            const newMsg = {
+                _id: Date.now().toString(),
+                senderId: currentUser?._id,
+                content: msgText,
+                createdAt: new Date().toISOString()
+            };
+            setMockMessages(prev => ({
+                ...prev,
+                [activeUser._id]: [...(prev[activeUser._id] || []), newMsg]
+            }));
+            const currentMsg = msgText;
+            setMsgText('');
+
+            // Simulate "Real-time" Reply
+            setTimeout(() => {
+                setIsTyping(true);
+                setTimeout(() => {
+                    const reply = {
+                        _id: (Date.now() + 1).toString(),
+                        senderId: activeUser._id,
+                        content: getMockReply(activeUser.name, currentMsg),
+                        createdAt: new Date().toISOString()
+                    };
+                    setMockMessages(prev => ({
+                        ...prev,
+                        [activeUser._id]: [...(prev[activeUser._id] || []), reply]
+                    }));
+                    setIsTyping(false);
+                }, 2500);
+            }, 800);
+
+        } else {
+            dispatch(sendMessage({ receiverId: activeUser._id, content: msgText }))
+                .then(() => dispatch(getConversationsList()));
+            setMsgText('');
+        }
+        setAiAnalysis(null);
+    };
+
+    const getMockReply = (name, text) => {
+        const t = text.toLowerCase();
+        if (name.includes('AI')) {
+            if (t.includes('hello') || t.includes('hi')) return "Hello! I am your HealNet Medical Assistant. How can I help you understand your records today?";
+            if (t.includes('help')) return "I can analyze your medical journey, suggest questions for your doctor, or explain complex terminology.";
+            return "That's an interesting perspective. Based on the community data I've processed, many patients with similar conditions find this type of sharing very therapeutic.";
+        }
+        return `Thanks for reaching out! I've been following your updates. It's really helpful to see how others are managing. Let's stay in touch!`;
     };
 
     const handleAiAnalysis = async () => {
@@ -87,7 +249,6 @@ function MessagesPage() {
                 headers: { Authorization: `Bearer ${currentUser?.token}` }
             });
 
-            // Parse response: "Summary: ... Suggestions: q1, q2"
             const raw = res.data.analysis;
             const summaryPart = raw.split('Suggestions:')[0].replace('Summary:', '').trim();
             const suggestionsPart = raw.split('Suggestions:')[1]?.trim().split(',').map(s => s.trim()) || [];
@@ -95,38 +256,30 @@ function MessagesPage() {
             setAiAnalysis({ summary: summaryPart, suggestions: suggestionsPart });
         } catch (err) {
             console.error("AI Chat Analysis Error:", err);
-        } finally {
-            setAiLoading(false);
-        }
+        } finally { setAiLoading(false); }
     }
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [currentConversation]);
+    }, [currentConversation, mockMessages, isTyping]);
 
-    // Enhanced Sidebar list: Merge the current active user if they are a 'new' conversation
-    const displayConversations = [...conversations];
-    const isNewParticipant = activeUser && !conversations.some(c =>
-        (c.senderId?._id === activeUser._id) || (c.receiverId?._id === activeUser._id) ||
-        (c.receiverId === activeUser._id) || (c.senderId === activeUser._id)
-    );
-
-    if (isNewParticipant) {
-        displayConversations.unshift({
-            _id: 'new-' + activeUser._id,
-            senderId: currentUser,
-            receiverId: activeUser,
-            content: 'Start a new conversation...',
-            createdAt: new Date().toISOString(),
-            isNew: true
-        });
-    }
 
     const filteredConversations = displayConversations.filter(c => {
         const other = c.senderId?._id === currentUser?._id ? c.receiverId : c.senderId;
-        return other?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            other?.username?.toLowerCase().includes(searchTerm.toLowerCase());
+        const otherName = other?.name || c.senderId?.name || '';
+        return otherName.toLowerCase().includes(searchTerm.toLowerCase());
     });
+
+    const getChatMessages = () => {
+        if (!activeUser) return [];
+        if (activeUser._id.startsWith('mock-')) {
+            const initialMock = MOCK_CONVERSATIONS.find(c => c.senderId._id === activeUser._id);
+            return [initialMock, ...(mockMessages[activeUser._id] || [])];
+        }
+        return currentConversation;
+    };
+
+    const chatMessages = getChatMessages();
 
     return (
         <AppLayout>
@@ -134,12 +287,12 @@ function MessagesPage() {
                 {/* Sidebar: Conv List */}
                 <div className="hn-messages-sidebar">
                     <div className="hn-messages-sidebar-header">
-                        <h2 className="hn-messages-title">Messages</h2>
+                        <h2 className="hn-messages-title">Direct Messages</h2>
                         <div className="hn-messages-search">
-                            <Search size={14} className="hn-messages-search-icon" />
+                            <Search size={16} className="hn-messages-search-icon" />
                             <input
                                 type="text"
-                                placeholder="Search conversations..."
+                                placeholder="Search people..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -148,46 +301,85 @@ function MessagesPage() {
 
                     <div className="hn-messages-list">
                         {isLoading && conversations.length === 0 ? (
-                            <div className="hn-messages-loading">
-                                <div className="hn-spinner-sm" />
-                            </div>
-                        ) : filteredConversations.length === 0 ? (
-                            <div className="hn-messages-empty">
-                                <MessageSquare size={24} style={{ opacity: 0.3, marginBottom: 8 }} />
-                                <p>No chats found</p>
+                            <div style={{ padding: 40, textAlign: 'center' }}><Loader2 className="animate-spin" color="var(--blue-trust)" /></div>
+                        ) : (filteredConversations.length === 0 && globalUsers.length === 0) ? (
+                            <div style={{ padding: 40, textAlign: 'center', opacity: 0.5 }}>
+                                <MessageSquare size={32} style={{ margin: '0 auto 10px' }} />
+                                <div style={{ fontSize: '0.8rem' }}>No users or chats found</div>
                             </div>
                         ) : (
-                            filteredConversations.map((msg) => {
-                                const otherUser = msg.senderId?._id === currentUser?._id ? msg.receiverId : msg.senderId;
-                                if (!otherUser) return null;
-                                const isActive = activeUser?._id === otherUser?._id;
+                            <>
+                                {filteredConversations.map((msg) => {
+                                    const otherUser = msg.senderId?._id === currentUser?._id ? msg.receiverId : msg.senderId;
+                                    if (!otherUser) return null;
+                                    const isActive = activeUser?._id === otherUser?._id;
 
-                                return (
-                                    <button
-                                        key={msg._id}
-                                        onClick={() => handleSelectConversation(otherUser._id)}
-                                        className={`hn-messages-item ${isActive ? 'active' : ''}`}
-                                    >
-                                        <div className="hn-messages-item-avatar">
-                                            {otherUser.profilePicture ? (
-                                                <img src={otherUser.profilePicture} alt="" />
-                                            ) : (
-                                                <span>{otherUser.name?.charAt(0)}</span>
-                                            )}
-                                            <div className="hn-messages-online-dot" />
-                                        </div>
-                                        <div className="hn-messages-item-info">
-                                            <div className="hn-messages-item-name">{otherUser.name}</div>
-                                            <div className="hn-messages-item-last">{msg.content}</div>
-                                        </div>
-                                        <div className="hn-messages-item-meta">
-                                            <div className="hn-messages-item-time">
-                                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    return (
+                                        <button
+                                            key={msg._id}
+                                            onClick={() => handleSelectConversation(otherUser._id)}
+                                            className={`hn-messages-item ${isActive ? 'active' : ''}`}
+                                        >
+                                            <div className="hn-messages-item-avatar" style={{ background: otherUser.isAI ? 'linear-gradient(135deg, #6366f1, #a855f7)' : undefined }}>
+                                                {otherUser.isAI ? <Brain size={20} color="white" /> : (otherUser.name?.charAt(0) || 'P')}
+                                                <div className="hn-messages-online-dot" />
                                             </div>
-                                        </div>
-                                    </button>
-                                );
-                            })
+                                            <div className="hn-messages-item-info">
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <div className="hn-messages-item-name">{otherUser.name}</div>
+                                                    <div className="hn-messages-item-time">
+                                                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </div>
+                                                </div>
+                                                <div className="hn-messages-item-last">{msg.content}</div>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+
+                                {suggestedUsers.length > 0 && searchTerm.length < 2 && (
+                                    <div className="hn-messages-section" style={{ marginTop: 24 }}>
+                                        <div className="hn-messages-section-title">SUGGESTED PEOPLE</div>
+                                        {suggestedUsers.map(u => (
+                                            <button
+                                                key={u._id}
+                                                onClick={() => handleSelectConversation(u._id, u)}
+                                                className={`hn-messages-item ${activeUser?._id === u._id ? 'active' : ''}`}
+                                            >
+                                                <div className="hn-messages-item-avatar">
+                                                    {u.name?.charAt(0) || 'U'}
+                                                </div>
+                                                <div className="hn-messages-item-info">
+                                                    <div className="hn-messages-item-name">{u.name}</div>
+                                                    <div className="hn-messages-item-last">@{u.username || 'user'}</div>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {globalUsers.length > 0 && (
+                                    <div className="hn-messages-section" style={{ marginTop: 24 }}>
+                                        <div className="hn-messages-section-title">PEOPLE IN HEALNET</div>
+                                        {globalUsers.map(u => (
+                                            <button
+                                                key={u._id}
+                                                onClick={() => handleSelectConversation(u._id, u)}
+                                                className={`hn-messages-item ${activeUser?._id === u._id ? 'active' : ''}`}
+                                            >
+                                                <div className="hn-messages-item-avatar">
+                                                    {u.name?.charAt(0) || 'U'}
+                                                </div>
+                                                <div className="hn-messages-item-info">
+                                                    <div className="hn-messages-item-name">{u.name}</div>
+                                                    <div className="hn-messages-item-last">@{u.username || 'user'}</div>
+                                                </div>
+                                                {isSearching && <Loader2 size={12} className="animate-spin" style={{ opacity: 0.5 }} />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
@@ -199,29 +391,28 @@ function MessagesPage() {
                             {/* Chat Header */}
                             <div className="hn-chat-header">
                                 <div className="hn-chat-header-user">
-                                    <div className="hn-chat-header-avatar">
-                                        {activeUser.profilePicture ? (
-                                            <img src={activeUser.profilePicture} alt="" />
-                                        ) : (
-                                            <span>{activeUser.name?.charAt(0)}</span>
-                                        )}
+                                    <div className="hn-chat-header-avatar" style={{ background: activeUser.isAI ? 'var(--blue-light)' : undefined }}>
+                                        {activeUser.isAI ? <Sparkles size={18} color="var(--blue-trust)" /> : (activeUser.name?.charAt(0) || 'P')}
                                     </div>
                                     <div className="hn-chat-header-info">
                                         <div className="hn-chat-header-name">{activeUser.name}</div>
                                         <div className="hn-chat-header-status">
-                                            <span className="online-indicator" /> Online
+                                            <span style={{ width: 8, height: 8, background: 'var(--green-success)', borderRadius: '50%' }} />
+                                            {activeUser.isAI ? 'Neural Core Active' : 'Available Now'}
                                         </div>
                                     </div>
                                 </div>
                                 <div className="hn-chat-header-actions">
-                                    <button
-                                        className={`hn-chat-icon-btn ${aiLoading ? 'loading' : ''}`}
-                                        onClick={handleAiAnalysis}
-                                        title="Analyze Medical Context"
-                                        disabled={aiLoading}
-                                    >
-                                        {aiLoading ? <Loader2 size={18} className="animate-spin" /> : <Brain size={18} color="#2563eb" />}
-                                    </button>
+                                    {!activeUser.isAI && (
+                                        <button
+                                            className={`hn-chat-icon-btn ${aiLoading ? 'loading' : ''}`}
+                                            onClick={handleAiAnalysis}
+                                            title="Analyze Medical Context"
+                                            disabled={aiLoading}
+                                        >
+                                            {aiLoading ? <Loader2 size={18} className="animate-spin" /> : <Brain size={18} color="var(--blue-trust)" />}
+                                        </button>
+                                    )}
                                     <button className="hn-chat-icon-btn"><Shield size={18} /></button>
                                     <button className="hn-chat-icon-btn"><MoreVertical size={18} /></button>
                                 </div>
@@ -229,41 +420,45 @@ function MessagesPage() {
 
                             {/* Messages Area */}
                             <div className="hn-chat-messages">
-                                {currentConversation.length === 0 && !isLoading && (
-                                    <div className="hn-chat-start-prompt">
-                                        <div className="hn-chat-start-icon">
-                                            <MessageSquare size={32} />
-                                        </div>
-                                        <h3>Start a conversation with {activeUser.name}</h3>
-                                        <p>Your messages are secure and kept private between you and the other user.</p>
+                                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', background: 'var(--surface)', borderRadius: 10, fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>
+                                        <Shield size={10} /> END-TO-END ENCRYPTED
                                     </div>
-                                )}
+                                </div>
 
-                                {currentConversation.map((msg, index) => {
-                                    const isMe = msg.senderId === currentUser?._id;
-                                    const date = new Date(msg.createdAt);
-
+                                {chatMessages.map((msg, index) => {
+                                    const isMe = (msg.senderId?._id || msg.senderId) === currentUser?._id;
                                     return (
                                         <div key={index} className={`hn-chat-bubble-wrap ${isMe ? 'mine' : 'theirs'}`}>
                                             <div className="hn-chat-bubble">
                                                 {msg.content}
-                                                <div className="hn-chat-bubble-time">
-                                                    {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    {isMe && <CheckCheck size={12} style={{ marginLeft: 4 }} />}
+                                                <div style={{ fontSize: '0.62rem', marginTop: 4, opacity: 0.7, textAlign: isMe ? 'right' : 'left' }}>
+                                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    {isMe && <CheckCheck size={10} style={{ marginLeft: 4 }} />}
                                                 </div>
                                             </div>
                                         </div>
                                     );
                                 })}
+
+                                {isTyping && (
+                                    <div className="hn-chat-bubble-wrap theirs">
+                                        <div className="hn-typing-indicator">
+                                            <div className="hn-typing-dot" style={{ animationDelay: '0s' }} />
+                                            <div className="hn-typing-dot" style={{ animationDelay: '0.2s' }} />
+                                            <div className="hn-typing-dot" style={{ animationDelay: '0.4s' }} />
+                                        </div>
+                                    </div>
+                                )}
                                 <div ref={messagesEndRef} />
                             </div>
 
                             {/* AI SUGGESTIONS BAR */}
                             {aiAnalysis && (
-                                <div className="hn-chat-ai-suggestions">
+                                <div className="hn-chat-ai-suggestions" style={{ animation: 'slideIn 0.3s ease' }}>
                                     <div className="hn-chat-ai-banner">
                                         <Sparkles size={12} />
-                                        <span>AI Context: {aiAnalysis.summary}</span>
+                                        <span>AI CONTEXT: {aiAnalysis.summary}</span>
                                     </div>
                                     <div className="hn-chat-ai-replies">
                                         {aiAnalysis.suggestions.map((s, i) => (
@@ -283,7 +478,7 @@ function MessagesPage() {
                                         type="text"
                                         value={msgText}
                                         onChange={(e) => setMsgText(e.target.value)}
-                                        placeholder="Type a message..."
+                                        placeholder={`Message ${activeUser.name}...`}
                                         className="hn-chat-input"
                                     />
                                     <button type="button" className="hn-chat-input-btn"><Smile size={20} /></button>
@@ -301,10 +496,18 @@ function MessagesPage() {
                         <div className="hn-chat-placeholder">
                             <div className="hn-chat-placeholder-content">
                                 <div className="hn-chat-placeholder-icon">
-                                    <MessageSquare size={48} />
+                                    <MessageSquare size={40} />
                                 </div>
-                                <h2>Your Conversations</h2>
-                                <p>Select a person from the left to view your history or start a new medical discussion.</p>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: 900 }}>Select a Perspective</h2>
+                                <p>Choose a medical discussion from the sidebar to view history or start a new consultation.</p>
+                                <div style={{ marginTop: 24, display: 'flex', gap: 12, justifyContent: 'center' }}>
+                                    <div style={{ padding: '8px 16px', background: 'var(--blue-light)', borderRadius: 12, fontSize: '0.75rem', fontWeight: 700, color: 'var(--blue-trust)' }}>
+                                        3 New Requests
+                                    </div>
+                                    <div style={{ padding: '8px 16px', background: 'var(--surface)', borderRadius: 12, fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                                        12 Active Chats
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -312,490 +515,9 @@ function MessagesPage() {
             </div>
 
             <style>{`
-                .hn-messages-container {
-                    display: grid;
-                    grid-template-columns: 320px 1fr;
-                    height: calc(100vh - 100px);
-                    background: white;
-                    border-radius: 16px;
-                    border: 1px solid #e2e8f0;
-                    overflow: hidden;
-                    box-shadow: 0 4px 20px -5px rgba(0,0,0,0.05);
-                }
-
-                .hn-messages-sidebar {
-                    border-right: 1px solid #f1f5f9;
-                    display: flex;
-                    flex-direction: column;
-                    background: #fcfdfe;
-                }
-
-                .hn-messages-sidebar-header {
-                    padding: 20px;
-                    border-bottom: 1px solid #f1f5f9;
-                }
-
-                .hn-messages-title {
-                    font-size: 1.25rem;
-                    font-weight: 800;
-                    color: #0f172a;
-                    margin-bottom: 15px;
-                }
-
-                .hn-messages-search {
-                    position: relative;
-                }
-
-                .hn-messages-search-icon {
-                    position: absolute;
-                    left: 12px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    color: #94a3b8;
-                }
-
-                .hn-messages-search input {
-                    width: 100%;
-                    padding: 8px 12px 8px 36px;
-                    border-radius: 10px;
-                    border: 1.5px solid #e2e8f0;
-                    background: #f8fafc;
-                    font-size: 0.82rem;
-                    outline: none;
-                    transition: all 0.2s;
-                }
-
-                .hn-messages-search input:focus {
-                    border-color: #2563eb;
-                    background: white;
-                    box-shadow: 0 0 0 3px rgba(37,99,235,0.06);
-                }
-
-                .hn-messages-list {
-                    flex: 1;
-                    overflow-y: auto;
-                    padding: 10px;
-                }
-
-                .hn-messages-item {
-                    width: 100%;
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    padding: 12px;
-                    border-radius: 12px;
-                    border: none;
-                    background: transparent;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    text-align: left;
-                    margin-bottom: 4px;
-                }
-
-                .hn-messages-item:hover {
-                    background: #f1f5f9;
-                }
-
-                .hn-messages-item.active {
-                    background: #eff6ff;
-                }
-
-                .hn-messages-item-avatar {
-                    width: 44px;
-                    height: 44px;
-                    border-radius: 12px;
-                    background: linear-gradient(135deg, #2563eb, #10b981);
-                    flex-shrink: 0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    font-weight: 700;
-                    position: relative;
-                }
-
-                .hn-messages-item-avatar img {
-                    width: 100%;
-                    height: 100%;
-                    border-radius: 12px;
-                    object-fit: cover;
-                }
-
-                .hn-messages-online-dot {
-                    position: absolute;
-                    bottom: -2px;
-                    right: -2px;
-                    width: 12px;
-                    height: 12px;
-                    background: #10b981;
-                    border: 2px solid white;
-                    border-radius: 50%;
-                }
-
-                .hn-messages-item-info {
-                    flex: 1;
-                    min-width: 0;
-                }
-
-                .hn-messages-item-name {
-                    font-weight: 700;
-                    font-size: 0.88rem;
-                    color: #0f172a;
-                    margin-bottom: 2px;
-                }
-
-                .hn-messages-item-last {
-                    font-size: 0.75rem;
-                    color: #64748b;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-
-                .hn-messages-item-time {
-                    font-size: 0.7rem;
-                    color: #94a3b8;
-                }
-
-                .hn-messages-main {
-                    display: flex;
-                    flex-direction: column;
-                    background: white;
-                }
-
-                .hn-chat-header {
-                    padding: 16px 24px;
-                    border-bottom: 1px solid #f1f5f9;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    background: rgba(255,255,255,0.8);
-                    backdrop-filter: blur(8px);
-                }
-
-                .hn-chat-header-user {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                }
-
-                .hn-chat-header-avatar {
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 10px;
-                    background: #f1f5f9;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-weight: 700;
-                    color: #64748b;
-                }
-
-                .hn-chat-header-name {
-                    font-weight: 800;
-                    size: 0.95rem;
-                    color: #0f172a;
-                }
-
-                .hn-chat-header-status {
-                    font-size: 0.72rem;
-                    color: #10b981;
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                    font-weight: 600;
-                }
-
-                .online-indicator {
-                    width: 6px;
-                    height: 6px;
-                    background: #10b981;
-                    border-radius: 50%;
-                }
-
-                .hn-chat-header-actions {
-                    display: flex;
-                    gap: 8px;
-                }
-
-                .hn-chat-icon-btn {
-                    padding: 8px;
-                    border-radius: 8px;
-                    border: none;
-                    background: transparent;
-                    color: #94a3b8;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                }
-
-                .hn-chat-icon-btn:hover {
-                    background: #f1f5f9;
-                    color: #475569;
-                }
-
-                .hn-chat-messages {
-                    flex: 1;
-                    overflow-y: auto;
-                    padding: 24px;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 16px;
-                    background: #fafbfc;
-                }
-
-                .hn-chat-bubble-wrap {
-                    display: flex;
-                    width: 100%;
-                }
-
-                .hn-chat-bubble-wrap.mine {
-                    justify-content: flex-end;
-                }
-
-                .hn-chat-bubble {
-                    max-width: 75%;
-                    padding: 12px 16px;
-                    border-radius: 18px;
-                    font-size: 0.88rem;
-                    line-height: 1.5;
-                    position: relative;
-                }
-
-                .mine .hn-chat-bubble {
-                    background: #2563eb;
-                    color: white;
-                    border-bottom-right-radius: 4px;
-                    box-shadow: 0 4px 12px rgba(37,99,235,0.2);
-                }
-
-                .theirs .hn-chat-bubble {
-                    background: white;
-                    color: #1e293b;
-                    border-bottom-left-radius: 4px;
-                    border: 1px solid #e2e8f0;
-                }
-
-                .hn-chat-bubble-time {
-                    font-size: 0.65rem;
-                    margin-top: 4px;
-                    display: flex;
-                    align-items: center;
-                    opacity: 0.8;
-                }
-
-                .mine .hn-chat-bubble-time {
-                    justify-content: flex-end;
-                    color: rgba(255,255,255,0.8);
-                }
-
-                .theirs .hn-chat-bubble-time {
-                    color: #94a3b8;
-                }
-
-                .hn-chat-input-area {
-                    padding: 20px 24px;
-                    background: white;
-                    border-top: 1px solid #f1f5f9;
-                }
-
-                .hn-chat-form {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    background: #f8fafc;
-                    padding: 6px 6px 6px 12px;
-                    border-radius: 14px;
-                    border: 1.5px solid #e2e8f0;
-                    transition: all 0.2s;
-                }
-
-                .hn-chat-form:focus-within {
-                    border-color: #2563eb;
-                    background: white;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-                }
-
-                .hn-chat-input {
-                    flex: 1;
-                    border: none;
-                    background: transparent;
-                    padding: 8px 0;
-                    font-size: 0.9rem;
-                    outline: none;
-                    font-family: inherit;
-                }
-
-                .hn-chat-input-btn {
-                    padding: 8px;
-                    border-radius: 8px;
-                    border: none;
-                    background: transparent;
-                    color: #94a3b8;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                }
-
-                .hn-chat-input-btn:hover {
-                    color: #2563eb;
-                    background: #eff6ff;
-                }
-
-                .hn-chat-send-btn {
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 10px;
-                    background: #2563eb;
-                    color: white;
-                    border: none;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    box-shadow: 0 4px 10px rgba(37,99,235,0.3);
-                }
-
-                .hn-chat-send-btn:hover:not(:disabled) {
-                    background: #1d4ed8;
-                    transform: scale(1.05);
-                }
-
-                .hn-chat-send-btn:disabled {
-                    background: #cbd5e1;
-                    box-shadow: none;
-                    cursor: not-allowed;
-                }
-
-                .hn-chat-placeholder {
-                    flex: 1;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    background: #fcfdfe;
-                }
-
-                .hn-chat-placeholder-content {
-                    text-align: center;
-                    max-width: 320px;
-                }
-
-                .hn-chat-placeholder-icon {
-                    width: 80px;
-                    height: 80px;
-                    border-radius: 24px;
-                    background: #eff6ff;
-                    color: #2563eb;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    margin: 0 auto 20px;
-                }
-
-                .hn-chat-placeholder h2 {
-                    font-size: 1.25rem;
-                    font-weight: 800;
-                    color: #0f172a;
-                    margin-bottom: 8px;
-                }
-
-                .hn-chat-placeholder p {
-                    font-size: 0.85rem;
-                    color: #64748b;
-                    line-height: 1.5;
-                }
-
-                .hn-chat-start-prompt {
-                    margin: auto;
-                    text-align: center;
-                    max-width: 300px;
-                }
-
-                .hn-chat-start-icon {
-                    width: 64px;
-                    height: 64px;
-                    background: white;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 20px;
-                    color: #2563eb;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    margin: 0 auto 16px;
-                }
-
-                .hn-chat-start-prompt h3 {
-                    font-weight: 700;
-                    margin-bottom: 8px;
-                }
-
-                .hn-chat-start-prompt p {
-                    font-size: 0.75rem;
-                    color: #64748b;
-                    line-height: 1.6;
-                }
-
-                .hn-spinner-sm {
-                    width: 20px;
-                    height: 20px;
-                    border: 2px solid #e2e8f0;
-                    border-top-color: #2563eb;
-                    border-radius: 50%;
-                    animation: spin 0.8s linear infinite;
-                    margin: 20px auto;
-                }
-
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
-
-                .hn-chat-ai-suggestions {
-                    padding: 8px 16px;
-                    background: #f8fafc;
-                    border-top: 1px solid #f1f5f9;
-                }
-
-                .hn-chat-ai-banner {
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    font-size: 0.7rem;
-                    color: #2563eb;
-                    font-weight: 800;
-                    text-transform: uppercase;
-                    margin-bottom: 8px;
-                    letter-spacing: 0.05em;
-                }
-
-                .hn-chat-ai-replies {
-                    display: flex;
-                    gap: 8px;
-                    flex-wrap: nowrap;
-                    overflow-x: auto;
-                    padding-bottom: 4px;
-                }
-
-                .hn-chat-ai-reply-btn {
-                    white-space: nowrap;
-                    padding: 6px 12px;
-                    background: white;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 100px;
-                    font-size: 0.75rem;
-                    color: #475569;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    font-weight: 600;
-                }
-
-                .hn-chat-ai-reply-btn:hover {
-                    border-color: #2563eb;
-                    color: #2563eb;
-                    background: #eff6ff;
-                }
-
-                .animate-spin {
-                    animation: spin 1s linear infinite;
-                }
+                @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                .animate-spin { animation: spin 1s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
             `}</style>
         </AppLayout>
     );

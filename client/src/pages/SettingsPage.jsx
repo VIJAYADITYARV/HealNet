@@ -88,9 +88,9 @@ function SettingsPage() {
 
             {/* Privacy & Identity */}
             <div style={{
-                background: 'white', borderRadius: 14, padding: '4px 20px',
-                boxShadow: '0 2px 15px -3px rgba(37,99,235,0.07)',
-                border: '1px solid #e2e8f0', marginBottom: 16,
+                background: 'var(--card-bg)', borderRadius: 14, padding: '4px 20px',
+                boxShadow: 'var(--shadow-card)', backdropFilter: 'blur(20px)',
+                border: '1px solid var(--card-border)', marginBottom: 16,
             }}>
                 <div style={{ padding: '14px 0', borderBottom: '1px solid #f1f5f9' }}>
                     <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>
@@ -109,9 +109,9 @@ function SettingsPage() {
 
             {/* Preferences */}
             <div style={{
-                background: 'white', borderRadius: 14, padding: '4px 20px',
-                boxShadow: '0 2px 15px -3px rgba(37,99,235,0.07)',
-                border: '1px solid #e2e8f0', marginBottom: 16,
+                background: 'var(--card-bg)', borderRadius: 14, padding: '4px 20px',
+                boxShadow: 'var(--shadow-card)', backdropFilter: 'blur(20px)',
+                border: '1px solid var(--card-border)', marginBottom: 16,
             }}>
                 <div style={{ padding: '14px 0', borderBottom: '1px solid #f1f5f9' }}>
                     <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>
@@ -136,9 +136,9 @@ function SettingsPage() {
 
             {/* Account */}
             <div style={{
-                background: 'white', borderRadius: 14, padding: '4px 20px',
-                boxShadow: '0 2px 15px -3px rgba(37,99,235,0.07)',
-                border: '1px solid #e2e8f0',
+                background: 'var(--card-bg)', borderRadius: 14, padding: '4px 20px',
+                boxShadow: 'var(--shadow-card)', backdropFilter: 'blur(20px)',
+                border: '1px solid var(--card-border)',
             }}>
                 <div style={{ padding: '14px 0', borderBottom: '1px solid #f1f5f9' }}>
                     <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>

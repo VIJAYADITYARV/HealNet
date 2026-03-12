@@ -25,43 +25,40 @@ export const analyzeSymptoms = async (req: Request, res: Response): Promise<void
             return;
         }
 
-        // 1. Get similar experiences from AI Service
-        let similarExperienceIds: string[] = [];
-        try {
-            const aiResponse = await axios.post('http://localhost:8000/search', {
-                text: symptoms,
-                top_k: 5
-            });
-            similarExperienceIds = aiResponse.data.results.map((r: any) => r.experience_id);
-        } catch (error) {
-            console.error('AI Service Search Error:', error);
-        }
-
-        // 2. Fetch full experience details from MongoDB
+        // 1. Semantic Search / Fallback matching
+        // Since localhost:8000 might not be running, we use a fallback text search
+        const keywords = symptoms.split(' ').filter((s: string) => s.length > 3);
         const experiences = await Experience.find({
-            _id: { $in: similarExperienceIds }
-        }).populate('userId', 'name isAnonymous');
+            $or: [
+                { condition: { $regex: symptoms, $options: 'i' } },
+                { description: { $regex: symptoms, $options: 'i' } },
+                { symptoms: { $in: keywords.map((k: string) => new RegExp(k, 'i')) } }
+            ]
+        }).populate('userId', 'name isAnonymous').limit(10);
 
         const similarCases = sanitizeExperiences(experiences);
+
+        // 2. Get AI Summary from Gemini
+        let aiSummary = '';
+        try {
+            const { generateAIResponse } = await import('../utils/aiService.js');
+            const aiPrompt = `
+                Analyze these symptoms reported by a patient: "${symptoms}".
+                Based on our community data, we found ${similarCases.length} similar cases.
+                Provide a 2-sentence empathetic summary of what these symptoms might indicate and what treatments patients typically reported.
+                Use "Our community data suggests..." and avoid direct medical diagnosis.
+            `;
+            aiSummary = await generateAIResponse(aiPrompt);
+        } catch (error) {
+            console.error('Gemini Summary Error:', error);
+            aiSummary = 'Our community data is currently being analyzed. Please consult a professional for immediate concerns.';
+        }
 
         // 3. Aggregate Stats
         const total = similarCases.length;
         const successCount = similarCases.filter(c => c.outcome === 'success').length;
         const successRate = total > 0 ? (successCount / total) * 100 : 0;
-
         const hospitals = [...new Set(similarCases.map(c => c.hospital))];
-
-        // 4. Get AI Summary
-        let aiSummary = '';
-        try {
-            const summaryResponse = await axios.post('http://localhost:8000/summarize', {
-                text: symptoms
-            });
-            aiSummary = summaryResponse.data.summary;
-        } catch (error) {
-            console.error('AI Service Summary Error:', error);
-            aiSummary = 'AI summary unavailable at the moment.';
-        }
 
         const responseData = {
             similarCases,

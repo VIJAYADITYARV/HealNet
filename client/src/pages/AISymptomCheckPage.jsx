@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { useSearchParams } from 'react-router-dom'
 import axios from 'axios'
@@ -21,25 +22,39 @@ const AISymptomCheckPage = () => {
     const [aiResult, setAiResult] = useState(null)
     const [error, setError] = useState('')
 
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        if (!formData.symptomText.trim()) return;
+    // Auto-trigger analysis when URL changes (e.g., from Dashboard)
+    useEffect(() => {
+        if (urlSymptom && urlSymptom !== formData.symptomText) {
+            setFormData(prev => ({ ...prev, symptomText: urlSymptom }));
+            // We manually call with the new value because state update is async
+            const updatedData = { ...formData, symptomText: urlSymptom };
+            triggerSearch(updatedData);
+        }
+    }, [urlSymptom]);
 
-        setLoading(true)
-        setError('')
-        setAiResult(null)
+    const triggerSearch = async (data = formData) => {
+        if (!data.symptomText.trim()) return;
+
+        setLoading(true);
+        setError('');
+        setAiResult(null);
 
         try {
-            const res = await axios.post('/api/ai/query', formData, {
+            const res = await axios.post('/api/ai/query', data, {
                 headers: { Authorization: `Bearer ${user?.token}` }
-            })
-            setAiResult(res.data)
+            });
+            setAiResult(res.data);
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to process AI query')
+            setError(err.response?.data?.message || 'Failed to process AI query');
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
+
+    const handleSubmit = (e) => {
+        if (e) e.preventDefault();
+        triggerSearch();
+    };
 
     return (
         <AppLayout>

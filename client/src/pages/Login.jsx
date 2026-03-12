@@ -59,6 +59,15 @@ function Login() {
         <div className="auth-screen">
             {/* Left brand panel */}
             <div className="auth-brand-panel">
+                {/* Animated orbs matching landing page */}
+                <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+                    <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: '40%', height: '40%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(37,99,235,0.3) 0%, transparent 70%)', filter: 'blur(60px)', animation: 'orbFloat1 20s ease-in-out infinite alternate' }} />
+                    <div style={{ position: 'absolute', bottom: '-10%', right: '-5%', width: '35%', height: '35%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(16,185,129,0.25) 0%, transparent 70%)', filter: 'blur(60px)', animation: 'orbFloat2 25s ease-in-out infinite alternate-reverse' }} />
+                </div>
+                <style>{`
+                    @keyframes orbFloat1 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(30px,-40px) scale(1.1)} }
+                    @keyframes orbFloat2 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(-20px,30px) scale(1.08)} }
+                `}</style>
                 <div className="auth-brand-inner">
                     <div className="auth-brand-logo">
                         <div className="auth-brand-logo-icon"><Activity size={20} className="text-white" /></div>
@@ -88,7 +97,7 @@ function Login() {
                     <div className="auth-mobile-top">
                         <div className="flex items-center justify-center gap-2 mb-2">
                             <div className="auth-card-logo-badge"><Activity size={14} className="text-white" /></div>
-                            <span className="text-brand-700 font-bold text-lg">HealNet</span>
+                            <span className="text-sky-400 font-bold text-lg">HealNet</span>
                         </div>
                         <p className="text-xs text-slate-400">Private. Anonymous. Insightful.</p>
                     </div>
@@ -104,7 +113,7 @@ function Login() {
 
                     {/* Global error */}
                     {errorMsg && (
-                        <div className="flex items-center gap-2 mb-5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs">
+                        <div className="flex items-center gap-2 mb-5 p-3 rounded-xl" style={{ background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.25)', color: '#fb7185', fontSize: '0.8rem' }}>
                             <AlertCircle size={14} className="flex-shrink-0" />
                             {errorMsg}
                         </div>
@@ -156,7 +165,7 @@ function Login() {
                                 <label className="auth-input-label !mb-0">Password</label>
                                 <Link
                                     to="/forgot-password"
-                                    className="text-xs text-brand-500 font-medium hover:text-brand-700 transition-colors"
+                                    className="text-xs text-sky-400 font-medium hover:text-sky-300 transition-colors"
                                 >
                                     Forgot password?
                                 </Link>
@@ -172,7 +181,7 @@ function Login() {
                                 />
                                 <button
                                     type="button"
-                                    className="auth-input-right text-slate-400 hover:text-slate-600 transition-colors"
+                                    className="auth-input-right text-slate-400 hover:text-slate-300 transition-colors"
                                     onClick={() => setShowPw(v => !v)}
                                     tabIndex={-1}
                                     aria-label={showPw ? 'Hide password' : 'Show password'}
@@ -200,9 +209,9 @@ function Login() {
                         </button>
                     </form>
 
-                    <p className="auth-secondary">
+                    <p className="auth-secondary" style={{ color: '#94a3b8', fontSize: '0.875rem', marginTop: '1.5rem', textAlign: 'center' }}>
                         Don&apos;t have an account?{' '}
-                        <Link to="/register" className="auth-link">Create one</Link>
+                        <Link to="/register" className="auth-link" style={{ color: '#38bdf8', fontWeight: 600 }}>Create one</Link>
                     </p>
                 </div>
             </div>

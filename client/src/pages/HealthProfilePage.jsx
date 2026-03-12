@@ -5,7 +5,7 @@ import AppLayout from '../components/layout/AppLayout'
 import {
     UserCircle, Shield, Activity, Plus, Search,
     Trash2, Edit2, Check, X, Calendar,
-    ChevronRight, Filter, Download, Info,
+    ChevronRight, Filter, Download, Info, AlertTriangle,
     Thermometer, Heart, Weight, Zap, LineChart as ChartIcon,
     Camera, FileText, Upload, Brain, Loader2
 } from 'lucide-react'
@@ -188,15 +188,15 @@ const HealthProfilePage = () => {
                     {/* TOP SECTION: HEADING */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Health Record Vault</h1>
-                            <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: 4 }}>Comprehensive CRUD Management for your Personal Medical Records</p>
+                            <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.03em' }}>Health Record Vault</h1>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: 4, fontWeight: 500 }}>Global CRUD Intelligence for your Personal Medical Records</p>
                         </div>
-                        <div style={{ display: 'flex', gap: 10 }}>
-                            <button onClick={() => setShowOCRModal(true)} className="hn-share-btn" style={{ background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }}>
-                                <Brain size={16} /> AI Scan Report
+                        <div style={{ display: 'flex', gap: 12 }}>
+                            <button onClick={() => setShowOCRModal(true)} className="hn-share-btn" style={{ background: 'rgba(37,99,235,0.1)', color: 'var(--blue-trust)', border: '1px solid rgba(37,99,235,0.2)' }}>
+                                <Brain size={18} /> AI Scan Report
                             </button>
-                            <button onClick={() => { setEditingLog(null); setShowLogModal(true); }} className="hn-share-btn">
-                                <Plus size={16} /> New Record
+                            <button onClick={() => { setEditingLog(null); setShowLogModal(true); }} className="hn-share-btn" style={{ background: 'linear-gradient(135deg, #2563eb, #0ea5e9)', boxShadow: '0 4px 14px rgba(37,99,235,0.3)' }}>
+                                <Plus size={18} /> New Record
                             </button>
                         </div>
                     </div>
@@ -262,18 +262,23 @@ const HealthProfilePage = () => {
                             </div>
 
                             {/* EMERGENCY QR PREVIEW */}
-                            <div style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', borderRadius: 16, padding: 24, color: 'white', position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)', borderRadius: 'var(--radius-card)', padding: '28px', color: 'white', position: 'relative', overflow: 'hidden', boxShadow: '0 15px 35px -10px rgba(30, 27, 75, 0.4)' }}>
                                 <div style={{ position: 'relative', zIndex: 1 }}>
-                                    <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800 }}>Emergency Medical ID</h4>
-                                    <p style={{ margin: '4px 0 16px', fontSize: '0.7rem', color: '#94a3b8' }}>Generate a unique QR code for first responders.</p>
+                                    <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, border: '1px solid rgba(255,255,255,0.2)' }}>
+                                        <AlertTriangle size={24} color="#fbbf24" />
+                                    </div>
+                                    <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, letterSpacing: '-0.01em' }}>Emergency Medical ID</h4>
+                                    <p style={{ margin: '6px 0 20px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>Generate a unique encryption-backed QR code for critical care responders.</p>
                                     <button
                                         onClick={() => window.open(`/profile/${user.username}`, '_blank')}
-                                        style={{ background: 'white', color: '#0f172a', border: 'none', padding: '10px 16px', borderRadius: 10, fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+                                        style={{ background: 'white', color: '#1e1b4b', border: 'none', padding: '12px 20px', borderRadius: 12, fontSize: '0.8rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, transition: 'transform 0.2s', width: '100%', justifyContent: 'center' }}
+                                        onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                                        onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
                                     >
-                                        <Shield size={14} /> View Public ID Card
+                                        <Shield size={16} /> View Public ID Card
                                     </button>
                                 </div>
-                                <Shield size={120} style={{ position: 'absolute', right: -20, bottom: -20, opacity: 0.1, color: 'white' }} />
+                                <Shield size={160} style={{ position: 'absolute', right: -40, bottom: -40, opacity: 0.05, color: 'white' }} />
                             </div>
                         </div>
 

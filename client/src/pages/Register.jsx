@@ -171,7 +171,7 @@ function Register() {
                     <div className="auth-mobile-top">
                         <div className="flex items-center justify-center gap-2 mb-2">
                             <div className="auth-card-logo-badge"><Activity size={14} className="text-white" /></div>
-                            <span className="text-brand-700 font-bold text-lg">HealNet</span>
+                            <span className="text-sky-400 font-bold text-lg">HealNet</span>
                         </div>
                         <p className="text-xs text-slate-400">Private. Anonymous. Insightful.</p>
                     </div>
@@ -283,7 +283,7 @@ function Register() {
                                 />
                                 <button
                                     type="button"
-                                    className="auth-input-right text-slate-400 hover:text-slate-600 transition-colors"
+                                    className="auth-input-right text-slate-400 hover:text-slate-300 transition-colors"
                                     onClick={() => setShowPw(v => !v)}
                                     tabIndex={-1}
                                     aria-label={showPw ? 'Hide password' : 'Show password'}
@@ -320,7 +320,7 @@ function Register() {
                                 />
                                 <button
                                     type="button"
-                                    className="auth-input-right text-slate-400 hover:text-slate-600 transition-colors"
+                                    className="auth-input-right text-slate-400 hover:text-slate-300 transition-colors"
                                     onClick={() => setShowCPw(v => !v)}
                                     tabIndex={-1}
                                     aria-label={showCPw ? 'Hide password' : 'Show password'}
@@ -348,9 +348,9 @@ function Register() {
                         </button>
                     </form>
 
-                    <p className="auth-secondary">
+                    <p className="auth-secondary" style={{ color: '#94a3b8', fontSize: '0.875rem', marginTop: '1.5rem', textAlign: 'center' }}>
                         Already have an account?{' '}
-                        <Link to="/login" className="auth-link">Sign in</Link>
+                        <Link to="/login" className="auth-link" style={{ color: '#38bdf8', fontWeight: 600 }}>Sign in</Link>
                     </p>
                 </div>
             </div>

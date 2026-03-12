@@ -143,14 +143,23 @@ function RightSidebar() {
                 ))}
             </div>
 
-            {/* Contribution nudge */}
-            <div className="hn-nudge">
-                <div className="hn-nudge-title">✨ Help the Community</div>
-                <div className="hn-nudge-sub">
-                    Share your experience to unlock personalized insights and help others make better health decisions.
+            {/* Gamified Contribution Nudge */}
+            <div className="hn-nudge" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', borderColor: '#334155', color: 'white', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: -10, left: -15, opacity: 0.08 }}>
+                    <Flame size={60} color="#f59e0b" />
                 </div>
-                <button className="hn-nudge-btn" onClick={() => navigate('/share-experience')}>
-                    Share Your Journey
+                <div className="hn-nudge-title" style={{ color: '#bae6fd', fontSize: '0.82rem', marginBottom: '5px' }}>
+                    🌟 Become a Community MVP
+                </div>
+                <div className="hn-nudge-sub" style={{ color: '#94a3b8', fontSize: '0.7rem', marginBottom: '10px', position: 'relative', zIndex: 1, lineHeight: 1.4 }}>
+                    Share your health journey to unlock AI insights and help others make safer decisions.
+                </div>
+                <button
+                    className="hn-nudge-btn"
+                    onClick={() => navigate('/share-experience')}
+                    style={{ background: 'linear-gradient(90deg, #38bdf8, #0284c7)', color: 'white', width: '100%', boxShadow: '0 4px 15px rgba(2,132,199,0.4)', padding: '6px 12px', fontSize: '0.75rem' }}
+                >
+                    Publish My Journey 🚀
                 </button>
             </div>
 
