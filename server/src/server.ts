@@ -31,7 +31,12 @@ const PORT = process.env.PORT || 5000;
 // ── 1. Core parsing & CORS (must come FIRST) ──────────────────
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: false }));
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production'
+    ? [/\.vercel\.app$/, 'http://localhost:5173'] // Matches any vercel deployment
+    : true,
+  credentials: true
+}));
 
 // DEBUG LOGGING
 app.use((req, res, next) => {
