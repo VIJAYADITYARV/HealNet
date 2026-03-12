@@ -103,6 +103,10 @@ app.get('/api/test-proxy', (req, res) => {
   res.json({ message: 'Proxy is working correctly', timestamp: new Date() });
 });
 
+app.get('/healthz', (req, res) => {
+  res.status(200).send('OK');
+});
+
 app.get('/', (_req, res) => {
   res.send('API is running...');
 });
