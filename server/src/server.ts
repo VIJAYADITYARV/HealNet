@@ -25,6 +25,19 @@ import messageRoutes from './routes/messageRoutes.js';
 
 dotenv.config();
 
+// Global Exception Handlers for better logging
+process.on('uncaughtException', (err) => {
+  console.error('[CRITICAL-ERROR] Uncaught Exception:', err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason: any) => {
+  console.error('[CRITICAL-ERROR] Unhandled Rejection:', reason?.message || reason);
+  if (reason?.stack) console.error(reason.stack);
+  process.exit(1);
+});
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
