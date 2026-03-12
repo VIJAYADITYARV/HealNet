@@ -30,6 +30,8 @@
     "mongoose": "^9.2.1",
     "multer": "^2.0.2",
     "node-cache": "^5.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
@@ -41,8 +43,6 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^25.3.0",
     "eslint": "^10.0.0",
-    "prettier": "^3.8.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "prettier": "^3.8.1"
   }
 }
