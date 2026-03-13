@@ -142,7 +142,8 @@ export const verifyMFALogin = async (req: Request, res: Response): Promise<void>
         const verified = speakeasy.totp.verify({
             secret: user.mfaSecret,
             encoding: 'base32',
-            token
+            token,
+            window: 1
         });
 
         if (verified) {
