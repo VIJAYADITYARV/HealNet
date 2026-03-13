@@ -57,7 +57,7 @@ function Login() {
 
     const onVerifyMFA = data => {
         setErrorMsg('')
-        dispatch(verifyMFA({ tempToken, token: data.mfaCode }))
+        dispatch(verifyMFA({ tempToken, token: data.otp }))
     }
 
     return (
@@ -131,7 +131,7 @@ function Login() {
                                 <div className={`auth-input-wrap ${errors.mfaCode ? 'error' : ''}`}>
                                     <Shield size={16} className="auth-input-icon" />
                                     <input
-                                        {...rf('mfaCode', {
+                                        {...rf('otp', {
                                             required: 'Verification code is required',
                                             pattern: { value: /^[0-9A-Z]{6,8}$/, message: 'Invalid code format' }
                                         })}
@@ -139,10 +139,10 @@ function Login() {
                                         placeholder="000000"
                                         className="auth-input text-center tracking-[0.4em] font-mono text-2xl py-6"
                                         autoFocus
-                                        autoComplete="one-time-code"
+                                        autoComplete="off"
                                     />
                                 </div>
-                                {errors.mfaCode && <p className="auth-input-error"><AlertCircle size={12} />{errors.mfaCode.message}</p>}
+                                {errors.otp && <p className="auth-input-error"><AlertCircle size={12} />{errors.otp.message}</p>}
                                 <p className="text-[0.7rem] text-slate-500 mt-2 text-center">
                                     Enter the 6-digit code from your authenticator app or a backup code.
                                 </p>
@@ -169,6 +169,7 @@ function Login() {
                                 type="button"
                                 onClick={() => dispatch(reset())}
                                 className="w-full text-center text-xs text-slate-400 mt-6 hover:text-sky-400 transition-all duration-200 py-2 rounded-lg hover:bg-white/5 active:scale-[0.98]"
+                                style={{ background: 'transparent', border: 'none', appearance: 'none' }}
                             >
                                 ← Back to login
                             </button>
