@@ -21,6 +21,20 @@ export const register = createAsyncThunk('auth/register', async (userData, thunk
 export const login = createAsyncThunk('auth/login', async (userData, thunkAPI) => {
     try {
         const response = await axios.post(API_URL + 'login', userData)
+        if (response.data && !response.data.mfaRequired) {
+            localStorage.setItem('user', JSON.stringify(response.data))
+        }
+        return response.data
+    } catch (error) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+})
+
+// Verify MFA
+export const verifyMFA = createAsyncThunk('auth/verifyMFA', async (mfaData, thunkAPI) => {
+    try {
+        const response = await axios.post(API_URL + 'mfa/login-verify', mfaData)
         if (response.data) {
             localStorage.setItem('user', JSON.stringify(response.data))
         }
@@ -40,6 +54,8 @@ const user = JSON.parse(localStorage.getItem('user'))
 
 const initialState = {
     user: user ? user : null,
+    mfaRequired: false,
+    tempToken: null,
     isError: false,
     isSuccess: false,
     isLoading: false,
@@ -55,6 +71,8 @@ export const authSlice = createSlice({
             state.isSuccess = false
             state.isError = false
             state.message = ''
+            state.mfaRequired = false
+            state.tempToken = null
         },
     },
     extraReducers: (builder) => {
@@ -78,8 +96,28 @@ export const authSlice = createSlice({
             })
             .addCase(login.fulfilled, (state, action) => {
                 state.isLoading = false
+                if (action.payload.mfaRequired) {
+                    state.mfaRequired = true
+                    state.tempToken = action.payload.tempToken
+                } else {
+                    state.isSuccess = true
+                    state.user = action.payload
+                }
+            })
+            .addCase(verifyMFA.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(verifyMFA.fulfilled, (state, action) => {
+                state.isLoading = false
                 state.isSuccess = true
+                state.mfaRequired = false
+                state.tempToken = null
                 state.user = action.payload
+            })
+            .addCase(verifyMFA.rejected, (state, action) => {
+                state.isLoading = false
+                state.isError = true
+                state.message = action.payload
             })
             .addCase(login.rejected, (state, action) => {
                 state.isLoading = false

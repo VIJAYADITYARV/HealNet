@@ -34,6 +34,9 @@ export interface IUser extends Document {
         date?: Date;
         notes?: string;
     }[];
+    mfaEnabled: boolean;
+    mfaSecret?: string;
+    backupCodes?: string[];
     createdAt: Date;
 }
 
@@ -70,6 +73,9 @@ const UserSchema: Schema = new Schema({
         date: { type: Date, default: Date.now },
         notes: { type: String }
     }],
+    mfaEnabled: { type: Boolean, default: false },
+    mfaSecret: { type: String, select: false },
+    backupCodes: [{ type: String, select: false }],
     createdAt: { type: Date, default: Date.now },
 });
 

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import speakeasy from 'speakeasy';
 import User from '../models/User.js';
 
 const generateToken = (id: string, isAnonymous: boolean) => {
@@ -90,6 +91,16 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         const user = await User.findOne({ $or: query });
 
         if (user && (await bcrypt.compare(password, user.password as string))) {
+            if (user.mfaEnabled) {
+                // Return challenge, not full token
+                res.json({
+                    _id: user.id,
+                    mfaRequired: true,
+                    tempToken: jwt.sign({ id: user.id, mfaPending: true }, process.env.JWT_SECRET || 'secret', { expiresIn: '5m' })
+                });
+                return;
+            }
+
             res.json({
                 _id: user.id,
                 name: user.name,
@@ -105,6 +116,67 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     } catch (error: any) {
         console.error('[loginUser]', error.message);
         res.status(500).json({ message: error.message || 'Server error' });
+    }
+};
+
+// @desc    Verify MFA token during login
+// @route   POST /api/auth/mfa/login-verify
+// @access  Public (Requires tempToken)
+export const verifyMFALogin = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { tempToken, token } = req.body;
+
+        if (!tempToken || !token) {
+            res.status(400).json({ message: 'MFA token and verification code required' });
+            return;
+        }
+
+        const decoded: any = jwt.verify(tempToken, process.env.JWT_SECRET || 'secret');
+        const user = await User.findById(decoded.id).select('+mfaSecret');
+
+        if (!user || !user.mfaEnabled || !user.mfaSecret) {
+            res.status(401).json({ message: 'MFA not active for this account' });
+            return;
+        }
+
+        const verified = speakeasy.totp.verify({
+            secret: user.mfaSecret,
+            encoding: 'base32',
+            token
+        });
+
+        if (verified) {
+            res.json({
+                _id: user.id,
+                name: user.name,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                isAnonymous: user.isAnonymous,
+                token: generateToken(user.id as string, user.isAnonymous),
+            });
+        } else {
+            // Check if it's a backup code
+            if (user.backupCodes?.includes(token)) {
+                // Remove used backup code
+                user.backupCodes = user.backupCodes.filter(c => c !== token);
+                await user.save();
+
+                res.json({
+                    _id: user.id,
+                    name: user.name,
+                    username: user.username,
+                    email: user.email,
+                    role: user.role,
+                    isAnonymous: user.isAnonymous,
+                    token: generateToken(user.id as string, user.isAnonymous),
+                });
+            } else {
+                res.status(401).json({ message: 'Invalid MFA code' });
+            }
+        }
+    } catch (error: any) {
+        res.status(401).json({ message: 'MFA session expired' });
     }
 };
 

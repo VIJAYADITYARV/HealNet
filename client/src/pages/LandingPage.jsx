@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import axios from 'axios'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { Brain, Activity, ShieldCheck, ArrowRight, Sparkles, Heart, Users, TrendingUp, Zap, MessageSquare, Star } from 'lucide-react'
@@ -24,6 +25,30 @@ function LandingPage() {
     const navigate = useNavigate()
     const { user } = useSelector((state) => state.auth)
     const [scrolled, setScrolled] = useState(false)
+    const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+    const [liveStats, setLiveStats] = useState({
+        totalExperiences: 12500,
+        successRate: 94,
+        hospitals: 850
+    })
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await axios.get('/api/analytics')
+                if (res.data && res.data.stats) {
+                    setLiveStats({
+                        totalExperiences: res.data.stats.totalExperiences,
+                        successRate: res.data.stats.successRate,
+                        hospitals: res.data.hospitalStats?.length || 850
+                    })
+                }
+            } catch (err) {
+                console.log("Using fallback stats")
+            }
+        }
+        fetchStats()
+    }, [])
 
     useEffect(() => {
         if (user) navigate('/')
@@ -31,8 +56,13 @@ function LandingPage() {
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 40)
+        const onMouseMove = (e) => setMousePos({ x: e.clientX, y: e.clientY })
         window.addEventListener('scroll', onScroll)
-        return () => window.removeEventListener('scroll', onScroll)
+        window.addEventListener('mousemove', onMouseMove)
+        return () => {
+            window.removeEventListener('scroll', onScroll)
+            window.removeEventListener('mousemove', onMouseMove)
+        }
     }, [])
 
     return (
@@ -47,6 +77,19 @@ function LandingPage() {
 
             {/* ═══ Premium Atmospheric Background ═══ */}
             <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+                {/* Dynamic Spotlight */}
+                <div style={{
+                    position: 'absolute',
+                    top: mousePos.y - 400,
+                    left: mousePos.x - 400,
+                    width: 800, height: 800,
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%)',
+                    filter: 'blur(80px)',
+                    pointerEvents: 'none',
+                    transition: 'top 0.3s ease-out, left 0.3s ease-out'
+                }} />
+
                 <div style={{
                     position: 'absolute', top: '-25%', left: '-10%', width: '60vw', height: '60vw',
                     borderRadius: '50%', background: 'radial-gradient(circle, rgba(37,99,235,0.2) 0%, transparent 70%)',
@@ -57,17 +100,12 @@ function LandingPage() {
                     borderRadius: '50%', background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%)',
                     filter: 'blur(120px)', animation: 'lavaLamp 30s ease-in-out infinite alternate-reverse'
                 }} />
-                <div style={{
-                    position: 'absolute', top: '10%', right: '10%', width: '40vw', height: '40vw',
-                    borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)',
-                    filter: 'blur(120px)', animation: 'lavaLamp 20s ease-in-out infinite alternate'
-                }} />
 
                 {/* Micro-grid Texture */}
                 <div style={{
                     position: 'absolute', inset: 0, opacity: 0.05,
                     backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-                    backgroundSize: '40px 40px'
+                    backgroundSize: '100px 100px'
                 }} />
             </div>
 
@@ -207,10 +245,10 @@ function LandingPage() {
                     border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden'
                 }}>
                     {[
-                        { val: 12500, suffix: '+', label: 'Patient Insights', icon: Heart },
-                        { val: 850, suffix: '+', label: 'Hospitals Tracked', icon: Activity },
-                        { val: 98, suffix: '%', label: 'Privacy Score', icon: ShieldCheck },
-                        { val: 24, suffix: '/7', label: 'AI Available', icon: Brain },
+                        { val: liveStats.totalExperiences, suffix: '+', label: 'Clinical Insights', icon: Heart },
+                        { val: liveStats.hospitals, suffix: '+', label: 'Medical Facilities', icon: Activity },
+                        { val: liveStats.successRate, suffix: '%', label: 'Outcome Accuracy', icon: ShieldCheck },
+                        { val: 24, suffix: '/7', label: 'AI Availability', icon: Brain },
                     ].map((s, i) => (
                         <div key={i} className="stat-card" style={{
                             padding: '24px 16px', textAlign: 'center', cursor: 'default',

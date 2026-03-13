@@ -3,7 +3,8 @@ import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import AppLayout from '../components/layout/AppLayout'
 import { toggleAnonymousMode, getUserProfile } from '../features/profile/profileSlice'
-import { Settings, Shield, Eye, Bell, Moon, Globe, Lock, ChevronRight } from 'lucide-react'
+import { Settings, Shield, Eye, Bell, Moon, Globe, Lock, ChevronRight, Key } from 'lucide-react'
+import MFASetup from '../components/MFASetup'
 
 function ToggleRow({ icon: Icon, label, desc, active, onToggle }) {
     return (
@@ -132,6 +133,24 @@ function SettingsPage() {
                 />
                 <LinkRow icon={Globe} label="Language & Region"
                     desc="English (India)" onClick={() => { }} />
+            </div>
+
+            {/* Security */}
+            <div style={{
+                background: 'var(--card-bg)', borderRadius: 14, padding: '4px 20px',
+                boxShadow: 'var(--shadow-card)', backdropFilter: 'blur(20px)',
+                border: '1px solid var(--card-border)', marginBottom: 16,
+            }}>
+                <div style={{ padding: '14px 0', borderBottom: '1px solid #f1f5f9' }}>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 }}>
+                        Security
+                    </div>
+                </div>
+                <MFASetup
+                    user={user}
+                    mfaEnabled={profile?.mfaEnabled || user?.mfaEnabled}
+                    onMFAActivated={() => dispatch(getUserProfile())}
+                />
             </div>
 
             {/* Account */}
