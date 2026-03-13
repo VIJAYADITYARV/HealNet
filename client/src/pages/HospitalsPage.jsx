@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import AppLayout from '../components/layout/AppLayout'
 import {
@@ -76,7 +77,7 @@ function HospitalCard({ h, onClick }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
                         <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>{h.name}</h3>
                         <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#2563eb', background: '#eff6ff', padding: '2px 10px', borderRadius: 20, textTransform: 'uppercase' }}>
-                            {h.trustTier} Tier
+                            {h.trustTier || 'Standard'} Tier
                         </span>
                     </div>
 
@@ -85,14 +86,14 @@ function HospitalCard({ h, onClick }) {
                             <MapPin size={12} /> {h.city}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>
-                            <Users size={12} /> {h.cases.toLocaleString()} cases
+                            <Users size={12} /> {(h.cases || 0).toLocaleString()} cases
                         </div>
                     </div>
 
-                    <p style={{ fontSize: '0.82rem', color: '#475569', margin: '12px 0', lineHeight: 1.5 }}>{h.tagline}</p>
+                    <p style={{ fontSize: '0.82rem', color: '#475569', margin: '12px 0', lineHeight: 1.5 }}>{h.tagline || 'Verified healthcare provider on the HealNet network.'}</p>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                        {h.specialties.map((s, i) => (
+                        {(h.specialties || ['General Medicine']).map((s, i) => (
                             <span key={i} style={{ background: '#f8fafc', color: '#1e293b', padding: '4px 10px', borderRadius: 8, fontSize: '0.72rem', fontWeight: 700, border: '1px solid #e2e8f0' }}>{s}</span>
                         ))}
                     </div>
@@ -115,8 +116,8 @@ function HospitalDetail({ h, onClose }) {
 
             <div style={{ background: 'white', borderRadius: 24, padding: 32, border: '1.5px solid #e2e8f0', boxShadow: '0 8px 30px rgba(0,0,0,0.03)', marginBottom: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
-                    <div style={{ width: 80, height: 80, borderRadius: 20, background: `${scoreColor(h.score)}10`, color: scoreColor(h.score), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 900 }}>
-                        {h.score}
+                    <div style={{ width: 80, height: 80, borderRadius: 20, background: `${scoreColor(h.score || 75)}10`, color: scoreColor(h.score || 75), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 900 }}>
+                        {h.score || '--'}
                     </div>
                     <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
@@ -126,7 +127,7 @@ function HospitalDetail({ h, onClose }) {
                         <div style={{ display: 'flex', gap: 16, alignItems: 'center', color: '#64748b', fontSize: '0.9rem', fontWeight: 600 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><MapPin size={16} /> {h.city}</div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Activity size={16} /> Verified Protocol</div>
-                            <div style={{ color: scoreColor(h.score), fontWeight: 800 }}>{h.score}% Aggregated Trust Score</div>
+                            <div style={{ color: scoreColor(h.score || 75), fontWeight: 800 }}>{h.score || 75}% Aggregated Trust Score</div>
                         </div>
                     </div>
                 </div>
@@ -215,6 +216,28 @@ function HospitalDetail({ h, onClose }) {
 function HospitalsPage() {
     const [selected, setSelected] = useState(null)
     const [filter, setFilter] = useState('All')
+    const [hospitals, setHospitals] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchHospitals = async () => {
+            try {
+                // If there's an error fetching or the list is empty, we keep the mock ones
+                const res = await axios.get('/api/hospitals/all')
+                if (res.data && res.data.length > 0) {
+                    setHospitals(res.data)
+                } else {
+                    setHospitals(HOSPITALS)
+                }
+            } catch (err) {
+                console.log("Using demo hospitals fallback")
+                setHospitals(HOSPITALS)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchHospitals()
+    }, [])
 
     return (
         <AppLayout>
@@ -258,8 +281,8 @@ function HospitalsPage() {
                     <HospitalDetail h={selected} onClose={() => setSelected(null)} />
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        {HOSPITALS.map(h => (
-                            <HospitalCard key={h.id} h={h} onClick={setSelected} />
+                        {hospitals.map(h => (
+                            <HospitalCard key={h._id || h.id} h={h} onClick={setSelected} />
                         ))}
                     </div>
                 )}
