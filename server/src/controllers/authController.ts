@@ -132,7 +132,7 @@ export const verifyMFALogin = async (req: Request, res: Response): Promise<void>
         }
 
         const decoded: any = jwt.verify(tempToken, process.env.JWT_SECRET || 'secret');
-        const user = await User.findById(decoded.id).select('+mfaSecret');
+        const user = await User.findById(decoded.id).select('+mfaSecret +backupCodes');
 
         if (!user || !user.mfaEnabled || !user.mfaSecret) {
             res.status(401).json({ message: 'MFA not active for this account' });
