@@ -18,6 +18,7 @@ import insightRoutes from './routes/insightRoutes.js';
 import reportAggregationsRoutes from './routes/reportAggregationsRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import seedHospitals from './utils/seeder.js';
 import profileRoutes from './routes/profileRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
 import likeRoutes from './routes/likeRoutes.js';
@@ -139,7 +140,10 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 // ── 7. Start ───────────────────────────────────────────────────
-connectDB();
+connectDB().then(() => {
+  seedHospitals();
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

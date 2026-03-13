@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSelector } from 'react-redux'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import AppLayout from '../components/layout/AppLayout'
@@ -214,6 +215,7 @@ function HospitalDetail({ h, onClose }) {
 }
 
 function HospitalsPage() {
+    const { user } = useSelector((state) => state.auth)
     const [selected, setSelected] = useState(null)
     const [filter, setFilter] = useState('All')
     const [hospitals, setHospitals] = useState([])
@@ -222,8 +224,11 @@ function HospitalsPage() {
     useEffect(() => {
         const fetchHospitals = async () => {
             try {
-                // If there's an error fetching or the list is empty, we keep the mock ones
-                const res = await axios.get('/api/hospitals/all')
+                const config = user?.token ? {
+                    headers: { Authorization: `Bearer ${user.token}` }
+                } : {}
+
+                const res = await axios.get('/api/hospitals/all', config)
                 if (res.data && res.data.length > 0) {
                     setHospitals(res.data)
                 } else {
@@ -237,7 +242,7 @@ function HospitalsPage() {
             }
         }
         fetchHospitals()
-    }, [])
+    }, [user])
 
     return (
         <AppLayout>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSelector } from 'react-redux'
 import axios from 'axios'
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
@@ -12,7 +13,8 @@ import {
 
 const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6'];
 
-const HospitalInsights = ({ hospitalId }) => {
+const HospitalIntelligence = ({ hospitalId }) => {
+    const { user } = useSelector((state) => state.auth)
     const [loading, setLoading] = useState(true)
     const [data, setData] = useState(null)
     const [error, setError] = useState(null)
@@ -21,7 +23,10 @@ const HospitalInsights = ({ hospitalId }) => {
         const fetchInsights = async () => {
             try {
                 setLoading(true)
-                const res = await axios.get(`/api/hospitals/${hospitalId}/insights`)
+                const config = user?.token ? {
+                    headers: { Authorization: `Bearer ${user.token}` }
+                } : {}
+                const res = await axios.get(`/api/hospitals/${hospitalId}/insights`, config)
                 setData(res.data)
                 setError(null)
             } catch (err) {
@@ -33,7 +38,7 @@ const HospitalInsights = ({ hospitalId }) => {
         }
 
         if (hospitalId) fetchInsights()
-    }, [hospitalId])
+    }, [hospitalId, user])
 
     if (loading) return (
         <div style={{ padding: '60px', textAlign: 'center', background: 'white', borderRadius: 24, border: '1px solid #e2e8f0' }}>
@@ -167,4 +172,4 @@ const HospitalInsights = ({ hospitalId }) => {
     )
 }
 
-export default HospitalInsights
+export default HospitalIntelligence
