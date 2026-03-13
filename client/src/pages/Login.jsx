@@ -137,8 +137,9 @@ function Login() {
                                         })}
                                         type="text"
                                         placeholder="000000"
-                                        className="auth-input text-center tracking-[0.5em] font-mono text-xl"
+                                        className="auth-input text-center tracking-[0.4em] font-mono text-2xl py-6"
                                         autoFocus
+                                        autoComplete="one-time-code"
                                     />
                                 </div>
                                 {errors.mfaCode && <p className="auth-input-error"><AlertCircle size={12} />{errors.mfaCode.message}</p>}
@@ -147,19 +148,29 @@ function Login() {
                                 </p>
                             </div>
 
-                            <button type="submit" className="auth-btn" disabled={isLoading}>
+                            <button
+                                type="submit"
+                                className="auth-btn group relative overflow-hidden active:scale-[0.99] transition-all duration-200"
+                                style={{
+                                    boxShadow: '0 0 20px rgba(56, 189, 248, 0.15)',
+                                    background: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)'
+                                }}
+                                disabled={isLoading}
+                            >
                                 {isLoading
-                                    ? <><Loader2 size={16} className="animate-spin" /> Verifying…</>
-                                    : <>Verify & Sign In <ArrowRight size={16} /></>
+                                    ? <><Loader2 size={18} className="animate-spin mr-2" /> Verifying…</>
+                                    : <span className="flex items-center justify-center gap-2">
+                                        Verify & Sign In <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                    </span>
                                 }
                             </button>
 
                             <button
                                 type="button"
                                 onClick={() => dispatch(reset())}
-                                className="w-full text-center text-xs text-sky-400 mt-4 hover:underline"
+                                className="w-full text-center text-xs text-slate-400 mt-6 hover:text-sky-400 transition-all duration-200 py-2 rounded-lg hover:bg-white/5 active:scale-[0.98]"
                             >
-                                Back to login
+                                ← Back to login
                             </button>
                         </form>
                     ) : (
