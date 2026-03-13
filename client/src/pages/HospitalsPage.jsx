@@ -4,8 +4,10 @@ import AppLayout from '../components/layout/AppLayout'
 import {
     Building2, MapPin, Star, Users, Activity,
     ChevronRight, Filter, ShieldCheck, TrendingUp,
-    Award, ThumbsUp, HeartPulse, CheckCircle
+    Award, ThumbsUp, HeartPulse, CheckCircle,
+    BrainCircuit
 } from 'lucide-react'
+import HospitalIntelligence from '../components/HospitalIntelligence'
 
 const HOSPITALS = [
     {
@@ -46,7 +48,7 @@ const HOSPITALS = [
     },
 ]
 
-const TABS = ['Overview', 'Trust Scorecard', 'Treatment Outcomes', 'Patient Journeys']
+const TABS = ['Overview', 'Trust Scorecard', 'Treatment Outcomes', 'Clinical Insights']
 const CONDITIONS = ['All', 'Cardiology', 'Neurology', 'Orthopaedics', 'Oncology', 'Fertility']
 
 function scoreColor(s) {
@@ -202,6 +204,9 @@ function HospitalDetail({ h, onClose }) {
                         ))}
                     </div>
                 </div>
+            )}
+            {tab === 'Clinical Insights' && (
+                <HospitalIntelligence hospitalId={h._id || h.id} />
             )}
         </div>
     )

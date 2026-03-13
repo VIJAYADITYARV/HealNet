@@ -1,5 +1,5 @@
 import express from 'express';
-import { searchHospitals, getAllHospitals, addHospital, getHospitalById, updateHospital } from '../controllers/hospitalController.js';
+import { searchHospitals, getAllHospitals, addHospital, getHospitalById, updateHospital, getHospitalInsights } from '../controllers/hospitalController.js';
 import { getHospitalTrustScores } from '../controllers/analyticsController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
@@ -13,6 +13,7 @@ router.get('/all', protect as any, getAllHospitals as any);
 router.post('/', protect as any, addHospital as any);
 
 router.get('/:id', getHospitalById as any);
+router.get('/:id/insights', getHospitalInsights as any);
 router.put('/:id', protect as any, admin as any, updateHospital as any);
 
 export default router;

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Hospital from '../models/Hospital.js';
+import Experience from '../models/Experience.js';
 import cache from '../utils/cache.js';
 
 // @desc    Search hospitals by name or city
@@ -114,6 +115,93 @@ export const updateHospital = async (req: Request, res: Response): Promise<void>
         // clear cache
         cache.del('all_hospitals');
         res.status(200).json(hospital);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+// @desc    Get detailed insights for a specific hospital (Business Case for Hospitals)
+// @route   GET /api/hospitals/:id/insights
+// @access  Public
+export const getHospitalInsights = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const hospital = await Hospital.findById(req.params.id);
+        if (!hospital) {
+            res.status(404).json({ message: 'Hospital not found' });
+            return;
+        }
+
+        // Aggregate experiences for this hospital
+        const stats = await Experience.aggregate([
+            { $match: { hospital: hospital.name } },
+            {
+                $group: {
+                    _id: '$hospital',
+                    totalExperiences: { $sum: 1 },
+                    avgHelpfulCount: { $avg: '$helpfulCount' },
+                    outcomes: {
+                        $push: '$outcome'
+                    },
+                    conditions: {
+                        $push: '$condition'
+                    }
+                }
+            }
+        ]);
+
+        if (stats.length === 0) {
+            res.status(200).json({
+                hospital,
+                insights: {
+                    totalExperiences: 0,
+                    successRate: 0,
+                    outcomeBreakdown: [],
+                    topConditions: [],
+                    recentExperiences: []
+                }
+            });
+            return;
+        }
+
+        const hospitalData = stats[0];
+
+        // Process outcomes
+        const outcomeCounts: Record<string, number> = {};
+        let successCount = 0;
+        hospitalData.outcomes.forEach((o: string) => {
+            outcomeCounts[o] = (outcomeCounts[o] || 0) + 1;
+            if (['success', 'improvement'].includes(o)) successCount++;
+        });
+
+        // Process conditions
+        const conditionCounts: Record<string, number> = {};
+        hospitalData.conditions.forEach((c: string) => {
+            conditionCounts[c] = (conditionCounts[c] || 0) + 1;
+        });
+
+        const topConditions = Object.entries(conditionCounts)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5);
+
+        const outcomeBreakdown = Object.entries(outcomeCounts)
+            .map(([name, value]) => ({ name, value }));
+
+        // Get latest 5 experiences
+        const recentExperiences = await Experience.find({ hospital: hospital.name })
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .populate('userId', 'name');
+
+        res.status(200).json({
+            hospital,
+            insights: {
+                totalExperiences: hospitalData.totalExperiences,
+                successRate: Math.round((successCount / hospitalData.totalExperiences) * 100),
+                outcomeBreakdown,
+                topConditions,
+                recentExperiences
+            }
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
