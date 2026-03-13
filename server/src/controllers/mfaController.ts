@@ -39,7 +39,7 @@ export const setupMFA = async (req: any, res: Response): Promise<void> => {
 export const verifyMFA = async (req: any, res: Response): Promise<void> => {
     try {
         const { token } = req.body;
-        const user = await User.findById(req.user?._id);
+        const user = await User.findById(req.user?._id).select('+mfaSecret');
 
         if (!user || !user.mfaSecret) {
             res.status(400).json({ message: 'MFA setup not initiated' });
@@ -79,7 +79,7 @@ export const verifyMFA = async (req: any, res: Response): Promise<void> => {
 export const disableMFA = async (req: any, res: Response): Promise<void> => {
     try {
         const { password } = req.body;
-        const user = await User.findById(req.user?._id);
+        const user = await User.findById(req.user?._id).select('+mfaSecret');
 
         if (!user) {
             res.status(404).json({ message: 'User not found' });
@@ -89,7 +89,7 @@ export const disableMFA = async (req: any, res: Response): Promise<void> => {
         // Potential TODO: Brcypt check password before disabling
 
         user.mfaEnabled = false;
-        user.mfaSecret = null as any;
+        (user as any).mfaSecret = undefined;
         user.backupCodes = [];
         await user.save();
 
