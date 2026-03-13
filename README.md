@@ -2,6 +2,8 @@
 
 ![HealNet Banner](https://raw.githubusercontent.com/VIJAYADITYARV/HealNet/main/client/public/logo-placeholder.png)
 
+**Live Demo**: [https://healnet-henna.vercel.app](https://healnet-henna.vercel.app)
+
 HealNet is a premium, high-fidelity MERN application designed to bridge the gap between complex medical data and patient understanding. By leveraging advanced **Generative AI (Gemini 1.5 Pro)** and a state-of-the-art **Neural Surface UI**, HealNet empowers users to own their health journey with confidence, clarity, and community support.
 
 ---
