@@ -12,8 +12,8 @@ router.get('/', searchHospitals as any);
 router.get('/all', protect as any, getAllHospitals as any);
 router.post('/', protect as any, addHospital as any);
 
-router.get('/:id', getHospitalById as any);
 router.get('/:id/insights', getHospitalInsights as any);
+router.get('/:id', getHospitalById as any);
 router.put('/:id', protect as any, admin as any, updateHospital as any);
 
 export default router;
